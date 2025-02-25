@@ -8,6 +8,10 @@ import { User, LogOut, X } from "lucide-react"; // Assuming you're using Lucide 
 import { Home } from "lucide-react";
 import { Button } from "@heroui/react";
 import Header from "../components/header/page";
+import { Box } from "lucide-react";
+import { HandCoinsIcon } from "lucide-react";
+import { Activity } from "lucide-react";
+import { HandCoins } from "lucide-react";
 
 const Layout = ({ children }) => {
   const pathname = usePathname();
@@ -22,9 +26,29 @@ const Layout = ({ children }) => {
       icon: <Home className="w-5 h-5 text-gray-600" />,
     },
     {
+      name: "Clients",
+      path: "/dashboard/clients",
+      icon: <User className="w-5 h-5 text-gray-600" />,
+    },
+    {
+      name: "Employees",
+      path: "/dashboard/employees",
+      icon: <User className="w-5 h-5 text-gray-600" />,
+    },
+    {
+      name: "Inventory",
+      path: "/dashboard/inventory",
+      icon: <Box className="w-5 h-5 text-gray-600" />,
+    },
+    {
       name: "Sales",
       path: "/dashboard/sales",
-      icon: <User className="w-5 h-5 text-gray-600" />,
+      icon: <Activity className="w-5 h-5 text-gray-600" />,
+    },
+    {
+      name: "Spending",
+      path: "/dashboard/spending",
+      icon: <HandCoins className="w-5 h-5 text-gray-600" />,
     },
   ];
 
@@ -50,7 +74,7 @@ const Layout = ({ children }) => {
             )}
 
             <aside
-              className={`fixed pt-2 lg:sticky lg:top-0 lg:left-0 lg:h-screen lg:w-64 w-64 h-full bg-white border-r border-gray-200 z-30 transform transition-transform duration-300 ease-in-out ${
+              className={`fixed flex flex-col pt-2 lg:sticky lg:top-0 lg:left-0 lg:h-screen lg:w-64 w-64 h-full bg-white border-r border-gray-200 z-30 transform transition-transform duration-300 ease-in-out ${
                 sidebarOpen ? "translate-x-0" : "-translate-x-full"
               } lg:translate-x-0`}
             >
@@ -91,13 +115,21 @@ const Layout = ({ children }) => {
                   <Button
                     className="w-full bg-white text-gray-600 flex justify-start p-3 text-sm hover:bg-gray-50 hover:text-blue-500 transition-all duration-300 ease-in-out"
                     radius="none"
-                    onClick={logout}
+                    onPres={logout}
                   >
                     <LogOut className="w-5 h-5 mr-3" />
                     Logout
                   </Button>
                 </li>
               </ul>
+
+                {/* pending logic. */}
+              {/* <div className="p-2 w-full flex-1">
+                <div className="w-full h-full rounded-xl bg-gray-200">
+                  asd
+                </div>
+              </div> */}
+
             </aside>
           </>
         )}
@@ -128,7 +160,9 @@ const Layout = ({ children }) => {
           {/* Page Content */}
           {children}
         </div>
+
       </div>
+
     </>
   );
 };

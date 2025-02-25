@@ -1,5 +1,5 @@
+import { HeroUIProvider } from "@heroui/system";
 import "./globals.css";
-import { HeroUIProvider } from "@heroui/react";
 
 export const metadata = {
   title: "Create Next App",
