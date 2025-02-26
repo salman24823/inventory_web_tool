@@ -29,7 +29,7 @@ const Layout = ({ children }) => {
     },
     {
       name: "Customers",
-      path: "/dashboard/clients",
+      path: "/dashboard/customers",
       icon: <User className="w-5 h-5 text-gray-600" />,
     },
     {

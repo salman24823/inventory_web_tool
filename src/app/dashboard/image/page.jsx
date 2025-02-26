@@ -12,7 +12,6 @@ const Image = () => {
 
         <img src={image} className="w-20 h-20" alt="" />
 
-
       <CldUploadWidget
         uploadPreset="ml_default"
         options={{ sources: ["local", "url"] }}
