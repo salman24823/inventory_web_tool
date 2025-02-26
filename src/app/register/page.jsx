@@ -3,9 +3,10 @@
 import React, { useState } from "react";
 import { Mail, Lock } from "lucide-react"; // Import Lucide icons
 import { toast } from "react-toastify";
-import { signIn } from "next-auth/react";
+import { User } from "lucide-react";
 
-export default function Login() {
+export default function Register() {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user"); // Default role
@@ -21,28 +22,28 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Use NextAuth to sign in
-      const loginRes = await signIn("credentials", {
-        email: email,
-        password: password,
-        role: role, // Don't auto redirect
-        redirect: false, // Don't auto redirect
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role,
+        }),
       });
 
-      if (loginRes?.error) {
-        toast.error("Error in login: Invalid Email, Password or Role");
+      if (!response.ok) {
+        toast.error("Failed to Register");
         setLoading(false);
         return;
       }
 
-      toast.success("Login Successful.");
-      location.replace("/dashboard"); // Navigate to dashboard
+      toast.success("Successfully Registered");
       setLoading(false);
     } catch (error) {
       console.log(error);
-      toast.error("An error occurred during login");
-      setLoading(false);
-    } finally {
+      toast.error("Error in Register");
       setLoading(false);
     }
   };
@@ -54,11 +55,28 @@ export default function Login() {
           <div className="border border-gray-300 rounded-lg p-6 max-w-md shadow-[0_2px_22px_-4px_rgba(93,96,127,0.2)] max-md:mx-auto">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="mb-6">
-                <h3 className="text-gray-800 text-3xl font-bold">Sign in</h3>
+                <h3 className="text-gray-800 text-3xl font-bold">Register</h3>
                 <p className="text-gray-500 text-sm mt-4 leading-relaxed">
                   Manage your inventory effortlessly with organized data and
                   keep your business running smoothly.
                 </p>
+              </div>
+
+              {/* Name Input */}
+              <div>
+                <label className="text-gray-800 text-sm mb-2 block">Name</label>
+                <div className="relative flex items-center">
+                  <User className="absolute left-3 text-gray-400" size={20} />
+                  <input
+                    name="name"
+                    type="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="w-full text-sm text-gray-800 border border-gray-300 pl-10 pr-4 py-3 rounded-lg outline-blue-600"
+                    placeholder="Enter your name"
+                  />
+                </div>
               </div>
 
               {/* Email Input */}
@@ -126,13 +144,6 @@ export default function Login() {
                       <span className="text-gray-800 text-sm">User</span>
                     </label>
                   </div>
-
-                  <a
-                    href="#"
-                    className="text-blue-600 hover:underline font-semibold"
-                  >
-                    Forgot your password?
-                  </a>
                 </div>
               </div>
 
@@ -142,7 +153,7 @@ export default function Login() {
                   type="submit"
                   className="w-full shadow-xl py-2.5 px-4 text-sm tracking-wide rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
                 >
-                  {loading ? "Loading..." : "Sign in"}
+                  {loading ? "Loading..." : "Register"}
                 </button>
               </div>
             </form>

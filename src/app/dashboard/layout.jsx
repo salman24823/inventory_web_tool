@@ -12,6 +12,8 @@ import { Box } from "lucide-react";
 import { HandCoinsIcon } from "lucide-react";
 import { Activity } from "lucide-react";
 import { HandCoins } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { toast } from "react-toastify";
 
 const Layout = ({ children }) => {
   const pathname = usePathname();
@@ -26,7 +28,7 @@ const Layout = ({ children }) => {
       icon: <Home className="w-5 h-5 text-gray-600" />,
     },
     {
-      name: "Clients",
+      name: "Customers",
       path: "/dashboard/clients",
       icon: <User className="w-5 h-5 text-gray-600" />,
     },
@@ -52,9 +54,17 @@ const Layout = ({ children }) => {
     },
   ];
 
-  const logout = () => {
-    // Add your logout logic here
-    console.log("Logged out");
+  const logout = async() => {
+
+    try {
+      toast.success("Signed out successfully.");
+      await signOut();
+      location.replace("/"); // Redirect to home page
+    } catch (error) {
+      toast.error("Error signing out. Please try again.");
+      console.error("Logout Error:", error);
+    }
+
   };
 
   return (
@@ -74,7 +84,7 @@ const Layout = ({ children }) => {
             )}
 
             <aside
-              className={`fixed flex flex-col pt-2 lg:sticky lg:top-0 lg:left-0 lg:h-screen lg:w-64 w-64 h-full bg-white border-r border-gray-200 z-30 transform transition-transform duration-300 ease-in-out ${
+              className={`top-0 fixed flex flex-col pt-2 lg:sticky lg:top-0 lg:left-0 lg:h-screen lg:w-64 w-64 h-full bg-white border-r border-gray-200 z-30 transform transition-transform duration-300 ease-in-out ${
                 sidebarOpen ? "translate-x-0" : "-translate-x-full"
               } lg:translate-x-0`}
             >
@@ -115,7 +125,7 @@ const Layout = ({ children }) => {
                   <Button
                     className="w-full bg-white text-gray-600 flex justify-start p-3 text-sm hover:bg-gray-50 hover:text-blue-500 transition-all duration-300 ease-in-out"
                     radius="none"
-                    onPres={logout}
+                    onPress={logout}
                   >
                     <LogOut className="w-5 h-5 mr-3" />
                     Logout

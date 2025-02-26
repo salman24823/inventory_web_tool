@@ -1,5 +1,7 @@
+import { ToastContainer } from "react-toastify";
 import "./globals.css";
 import { HeroUIProvider } from "@heroui/react";
+import SessionWrapper from "./components/SessionWrapper/page";
 
 export const metadata = {
   title: "Create Next App",
@@ -10,9 +12,10 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body>
-        <HeroUIProvider>
-        {children}
-        </HeroUIProvider>
+        <SessionWrapper>
+          <HeroUIProvider>{children}</HeroUIProvider>
+          <ToastContainer />
+        </SessionWrapper>
       </body>
     </html>
   );
