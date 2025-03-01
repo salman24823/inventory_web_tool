@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+/* scroll bar */
+
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px; /* Thin scrollbar */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent; /* Optional: Transparent track */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #007bff; /* Blue scrollbar */
+  border-radius: 10px; /* Rounded corners */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #0056b3; /* Darker blue on hover */
+}
+
+
 /* table css */
 
 .data-\[focus-visible\=true\]\:outline-focus[data-focus-visible="true"] {
@@ -26,7 +46,6 @@
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 .payment-filter{
- 
   border-radius: 13px;
 }
 thead {

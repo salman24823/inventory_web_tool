@@ -6,10 +6,10 @@ import { HandCoins } from "lucide-react";
 
 const Cards = () => {
   const [stats, setStats] = useState({
-    users: 20000,
-    products: 15000,
+    users: 1,
+    products: 8,
     pendings: 5000,
-    revenue: 250000,
+    revenue: 0,
   });
 
   const cardData = [

@@ -4,23 +4,24 @@ import React, { useState } from "react";
 import { Mail, Lock } from "lucide-react"; // Import Lucide icons
 import { toast } from "react-toastify";
 import { User } from "lucide-react";
+import { Phone } from "lucide-react";
 
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("user"); // Default role
   const [loading, setLoading] = useState(false); // Default role
 
-  const handleRoleChange = (selectedRole) => {
-    setRole(selectedRole);
-  };
+  // const handleRoleChange = (selectedRole) => {
+  //   setRole(selectedRole);
+  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setLoading(true);
-
+  
     try {
       const response = await fetch("/api/register", {
         method: "POST",
@@ -28,25 +29,32 @@ export default function Register() {
         body: JSON.stringify({
           name,
           email,
+          phone,
           password,
           role,
         }),
       });
-
+  
+      const data = await response.json(); // Parse response JSON
+  
       if (!response.ok) {
-        toast.error("Failed to Register");
+        toast.error(data.error || "Failed to Register");
         setLoading(false);
         return;
       }
+  
+      toast.success(data.message || "Successfully Registered");
 
-      toast.success("Successfully Registered");
-      setLoading(false);
+      location.replace("/")
+      
     } catch (error) {
-      console.log(error);
+      console.error(error);
       toast.error("Error in Register");
+    } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="font-[sans-serif]">
@@ -98,6 +106,25 @@ export default function Register() {
                 </div>
               </div>
 
+              {/* Phone Input */}
+              <div>
+                <label className="text-gray-800 text-sm mb-2 block">
+                  Phone
+                </label>
+                <div className="relative flex items-center">
+                  <Phone className="absolute left-3 text-gray-400" size={20} />
+                  <input
+                    name="phone"
+                    type="phone"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                    className="w-full text-sm text-gray-800 border border-gray-300 pl-10 pr-4 py-3 rounded-lg outline-blue-600"
+                    placeholder="Enter your phone"
+                  />
+                </div>
+              </div>
+
               {/* Password Input */}
               <div>
                 <label className="text-gray-800 text-sm mb-2 block">
@@ -118,7 +145,7 @@ export default function Register() {
               </div>
 
               {/* Role Selection */}
-              <div>
+              {/* <div>
                 <label className="text-gray-800 text-sm mb-2 block">
                   Select Role
                 </label>
@@ -145,7 +172,7 @@ export default function Register() {
                     </label>
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Sign-in Button */}
               <div className="!mt-8">

@@ -12,6 +12,8 @@ export const authOptions = NextAuth({
       async authorize(credentials) {
         const { email, password, role } = credentials;
 
+        console.log(email, password, role,"data")
+
         if (!email || !password || !role) {
           throw new Error("All fields are required");
         }

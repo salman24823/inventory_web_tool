@@ -49,7 +49,7 @@ const Layout = ({ children }) => {
     },
     {
       name: "Spending",
-      path: "/dashboard/spending",
+      path: "/dashboard/spendings",
       icon: <HandCoins className="w-5 h-5 text-gray-600" />,
     },
   ];
@@ -136,7 +136,7 @@ const Layout = ({ children }) => {
                 {/* pending logic. */}
               {/* <div className="p-2 w-full flex-1">
                 <div className="w-full h-full rounded-xl bg-gray-200">
-                  asd
+                  bottom large box for the styling and cover the space
                 </div>
               </div> */}
 
