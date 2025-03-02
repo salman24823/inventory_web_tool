@@ -107,3 +107,39 @@ export async function DELETE(req) {
     );
   }
 }
+
+
+export async function PUT(req) {
+  await dbConnection(); // Ensure DB connection
+  try {
+    const { orders } = await req.json(); // Parse request body
+
+    if (!orders) {
+      return NextResponse.json(
+        { success: false, message: "Orders must be an array" },
+        { status: 400 }
+      );
+    }
+
+    console.log(orders, "Order ID PUT");
+
+    const updatedOrders = await Promise.all(
+      orders.map(async (order) => {
+        const { _id, ...updateData } = order;
+        return await orderModel.findByIdAndUpdate(_id, updateData, { new: true });
+      })
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: "Orders updated successfully",
+      updatedOrders,
+    });
+  } catch (error) {
+    console.error("Error updating orders:", error);
+    return NextResponse.json(
+      { success: false, message: "Server error" },
+      { status: 500 }
+    );
+  }
+}

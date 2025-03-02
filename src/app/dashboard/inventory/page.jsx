@@ -146,10 +146,31 @@ export default function Inventory() {
     }
   }
 
-  function handleConfirm() {
-    alert("Done");
-    console.log(orders, "orders");
-    setEditing(false);
+  async function handleConfirm() {
+    
+    try {
+      const response = await fetch("/api/handleOrder", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orders }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update");
+      }
+
+      toast.success("Successfully updated");
+      fetchOrders();
+      setEditing(false);
+    } catch (error) {
+      console.error(error);
+      toast.error("Error in Updating");
+    } finally {
+      setTimeout(() => {
+        setLoading(null); // Ensure loading state lasts at least 1 sec
+      }, 1000);
+    }
+
   }
 
   return (

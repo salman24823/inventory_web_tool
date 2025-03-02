@@ -102,7 +102,7 @@ const MultiStepForm = () => {
             <div id="step-1" className={`step ${currentStep !== 1 ? "hidden" : ""}`}>
               <div className="mb-6">
                 <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900">
-                  name
+                  Name
                 </label>
                 <input
                   type="text"
