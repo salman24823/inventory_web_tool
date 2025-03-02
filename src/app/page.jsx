@@ -128,7 +128,7 @@ export default function Login() {
                   </div>
 
                   <a
-                    href="#"
+                    href="/reset"
                     className="text-blue-600 hover:underline font-semibold"
                   >
                     Forgot your password?
@@ -137,13 +137,24 @@ export default function Login() {
               </div>
 
               {/* Sign-in Button */}
-              <div className="!mt-8">
+              <div className="!mt-8 w-full">
                 <button
                   type="submit"
                   className="w-full shadow-xl py-2.5 px-4 text-sm tracking-wide rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none"
                 >
                   {loading ? "Loading..." : "Sign in"}
                 </button>
+                <div className="">
+                  <hr className="my-6" />
+                  <div className="flex w-full justify-center text-center">
+                    <a
+                      href="/register"
+                      className="text-gray-700"
+                    >
+                      Register New Account !
+                    </a>
+                  </div>
+                </div>
               </div>
             </form>
           </div>
