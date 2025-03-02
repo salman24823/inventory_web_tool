@@ -111,7 +111,7 @@ export default function CustomerTable() {
               )}
             </TableCell>
             <TableCell>
-              {customer.name ? `$${customer.totalPayment.toFixed(2)}` : ""}
+              {customer.name ? `${customer.totalPayment.toFixed(2)} PKR` : ""}
             </TableCell>
             <TableCell>
               {customer.name && (
@@ -131,7 +131,7 @@ export default function CustomerTable() {
               )}
             </TableCell>
             <TableCell>
-              {customer.name ? `$${customer.pendingAmount.toFixed(2)}` : ""}
+              {customer.name ? `${customer.pendingAmount.toFixed(2)} PKR` : ""}
             </TableCell>
           </TableRow>
         ))}

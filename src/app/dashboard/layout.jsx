@@ -134,11 +134,15 @@ const Layout = ({ children }) => {
               </ul>
 
                 {/* pending logic. */}
-              {/* <div className="p-2 w-full flex-1">
-                <div className="w-full h-full rounded-xl bg-gray-200">
-                  bottom large box for the styling and cover the space
+              <div className="p-3 relative w-full flex items-end flex-1">
+
+
+                <div className="w-full h-2/3 border border-slate-300 rounded-xl bg-slate-50">
+                  
                 </div>
-              </div> */}
+
+
+              </div>
 
             </aside>
           </>
