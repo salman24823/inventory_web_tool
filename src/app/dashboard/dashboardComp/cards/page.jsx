@@ -1,42 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Users, Package, Activity } from "lucide-react";
 import { HandCoins } from "lucide-react";
+import { Button, Spinner } from "@heroui/react";
 
 const Cards = () => {
-  const [stats, setStats] = useState({
-    users: 1,
-    products: 8,
-    pendings: 5000,
-    revenue: 0,
-  });
+  const [totalUsers, setTotalUsers] = useState(null);
+  const [totalRevenue, setTotalRevenue] = useState(null);
+  const [totalPending, setTotalPending] = useState(null);
+  const [totalOrders, setTotalOrders] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  async function HandleOrders() {
+    try {
+      const response = await fetch("/api/handleOrder");
+      const result = await response.json();
+
+      const uniqueUsers = new Set(result.map(item => item.phone)).size;
+      const revenue = result.reduce((sum, item) => sum + Number(item.totalPrice), 0);
+      const pendingAmount = result.reduce((sum, item) => sum + (Number(item.totalPrice) - Number(item.amountPaid)), 0);
+      const ordersCount = result.length;
+
+      setTotalUsers(uniqueUsers);
+      setTotalRevenue(revenue);
+      setTotalPending(pendingAmount);
+      setTotalOrders(ordersCount);
+    } catch (error) {
+      console.log(error, "error fromGET");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    HandleOrders();
+  }, []);
 
   const cardData = [
     {
       title: "Total Customers",
-      value: stats.users,
+      value: loading ? <Spinner size="sm" /> : totalUsers ?? 0,
       icon: <Users className="text-blue-500 w-6 h-6" />,
       bgColor: "bg-blue-100",
       hoverBgColor: "hover:bg-blue-200",
     },
     {
       title: "Total Orders",
-      value: stats.products,
+      value: loading ? <Spinner size="sm" /> : totalOrders ?? 0,
       icon: <Package className="text-yellow-500 w-6 h-6" />,
       bgColor: "bg-yellow-100",
       hoverBgColor: "hover:bg-yellow-200",
     },
     {
       title: "Total Pendings",
-      value: `PKR ${stats.pendings.toLocaleString()}`,
+      value: loading ? <Spinner size="sm" /> : `PKR ${totalPending ?? 0}`,
       icon: <HandCoins className="text-red-500 w-6 h-6" />,
       bgColor: "bg-red-100",
       hoverBgColor: "hover:bg-red-200",
     },
     {
       title: "Total Revenue",
-      value: `PKR ${stats.revenue.toLocaleString()}`,
+      value: loading ? <Spinner size="sm" /> : `PKR ${totalRevenue ?? 0}`,
       icon: <Activity className="text-green-500 w-6 h-6" />,
       bgColor: "bg-green-100",
       hoverBgColor: "hover:bg-green-200",

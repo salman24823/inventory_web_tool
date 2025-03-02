@@ -42,11 +42,11 @@ const Layout = ({ children }) => {
       path: "/dashboard/inventory",
       icon: <Box className="w-5 h-5 text-gray-600" />,
     },
-    {
-      name: "Sales",
-      path: "/dashboard/sales",
-      icon: <Activity className="w-5 h-5 text-gray-600" />,
-    },
+    // {
+    //   name: "Sales",
+    //   path: "/dashboard/sales",
+    //   icon: <Activity className="w-5 h-5 text-gray-600" />,
+    // },
     {
       name: "Spending",
       path: "/dashboard/spendings",

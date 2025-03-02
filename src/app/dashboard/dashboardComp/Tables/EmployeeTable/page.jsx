@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -11,64 +11,52 @@ import {
 } from "@heroui/react";
 
 export default function EmployeeTable() {
-  const [employees] = useState([
-    {
-      id: 1,
-      name: "Ali Khan",
-      phone: "+92 300 1234567",
-      role: "Manager",
-      avatar: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
-    },
-    {
-      id: 2,
-      name: "Fatima Ahmed",
-      phone: "+92 310 9876543",
-      role: "HR Officer",
-      avatar: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-    },
-    {
-      id: 3,
-      name: "Bilal Siddiqui",
-      phone: "+92 321 4567890",
-      role: "Software Engineer",
-      avatar: "https://i.pravatar.cc/150?u=a04258114e29026702d",
-    },
-    {
-      id: 4,
-      name: "Sana Malik",
-      phone: "+92 333 1122334",
-      role: "Sales Executive",
-      avatar: "https://i.pravatar.cc/150?u=a048581f4e29026701d",
-    },
-  ]);
+  const [employees, setEmployees] = useState([]); // Store employees
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch("/api/handleEmployee"); // ✅ Fetch from Employee API
+      if (!response.ok) throw new Error("Failed to fetch employees");
+      const data = await response.json();
+      setEmployees(data.slice(0, 5)); // ✅ Ensure only 5 employees are stored
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  // Fill remaining rows with empty placeholders if less than 5 employees exist
+  const filledEmployees = [...employees, ...Array(5 - employees.length).fill(null)];
 
   return (
     <Table aria-label="Employee table">
       <TableHeader>
         <TableColumn>EMPLOYEE</TableColumn>
-        {/* <TableColumn>ROLE</TableColumn> */}
       </TableHeader>
 
       <TableBody emptyContent="NO EMPLOYEES FOUND">
-        {employees.map((employee) => (
-          <TableRow
-            key={employee.id}
-            className="hover:bg-gray-100 transition-colors"
-          >
+        {filledEmployees.map((employee, index) => (
+          <TableRow key={index} className="hover:bg-gray-100 transition-colors">
             <TableCell>
-              <div className="flex items-center gap-3">
-                <img
-                  src={employee.avatar}
-                  alt={employee.name}
-                  className="w-10 h-10 rounded-full"
-                />
-                <div>
-                  <p className="font-bold">{employee.name}</p>
-                  <p className="text-sm text-gray-500">{employee.role}</p>
+              {employee ? (
+                <div className="flex items-center gap-3">
+                  <img
+                    src={employee.image || "https://static.vecteezy.com/system/resources/previews/000/439/863/non_2x/vector-users-icon.jpg"}
+                    alt={employee.name}
+                    className="w-10 h-10 rounded-full"
+                  />
+                  <div>
+                    <p className="font-bold">{employee.name}</p>
+                    <p className="text-sm text-gray-500">{employee.role}</p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="h-10"></div> // Empty row without an index
+              )}
             </TableCell>
-            {/* <TableCell>{employee.role}</TableCell> */}
           </TableRow>
         ))}
       </TableBody>

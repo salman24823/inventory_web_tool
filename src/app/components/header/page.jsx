@@ -12,7 +12,9 @@ export default function Header() {
   return (
     <header className="p-4 bg-white border-b flex border-slate-200">
   
-      <div className="w-64">Business Name</div>
+      <div className="w-64 flex items-center">
+        <h2>Business Name</h2>
+      </div>
 
       <div className="flex flex-1 justify-between items-center text-gray-600 text-sm">
         {/* Breadcrumbs */}
