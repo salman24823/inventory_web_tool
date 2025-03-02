@@ -50,7 +50,7 @@ export default function EmployeeTable() {
                   />
                   <div>
                     <p className="font-bold">{employee.name}</p>
-                    <p className="text-sm text-gray-500">{employee.role}</p>
+                    <p className="text-sm text-gray-500">{employee.phone}</p>
                   </div>
                 </div>
               ) : (
