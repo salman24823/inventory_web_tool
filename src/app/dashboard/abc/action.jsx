@@ -6,23 +6,24 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  Input,Dropdown, DropdownTrigger, DropdownMenu, DropdownItem
+  Input,
+  RadioGroup,
+  Radio,
 } from "@heroui/react";
 import { toast } from "react-toastify"; // Assuming you're using react-hot-toast for notifications
 import { CldUploadWidget } from "next-cloudinary";
 
-export default function Action({ fetchStocks, isOpen, onOpenChange }) {
+export default function Action({fetchOrders,isOpen,onOpenChange}) {
   const [modalPlacement, setModalPlacement] = useState("bottom");
   const [loading, setLoading] = useState(false);
-  const [companyName, setCompanyName] = useState("");
+  const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [stockName, setStockName] = useState("");
+  const [orderName, setOrderName] = useState("");
   const [totalPrice, setTotalPrice] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
-  const [quantity, setQuantity] = useState("");
   const [issueDate, setIssueDate] = useState("");
   const [deadline, setDeadline] = useState("");
-  const [stockImage, setStockImage] = useState("");
+  const [orderImage, setOrderImage] = useState();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,19 +31,18 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/handleStock", {
+      const response = await fetch("/api/handleOrder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          companyName,
+          name,
           phone,
-          stockName,
+          orderName,
           totalPrice,
           amountPaid,
-          quantity,
           issueDate,
           deadline,
-          stockImage,
+          orderImage
         }),
       });
 
@@ -52,7 +52,8 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
 
       toast.success("Successfully uploaded");
 
-      fetchStocks(); // Refresh the stock list
+      fetchOrders()
+
       onOpenChange(false); // Close the modal on success
     } catch (error) {
       console.error(error);
@@ -64,6 +65,7 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
 
   return (
     <div className="flex justify-center items-center flex-col gap-4">
+ 
       <div className="overflow-y-scroll">
         <Modal
           className="h-[85vh]"
@@ -75,16 +77,16 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
             {(onClose) => (
               <>
                 <ModalHeader className="flex flex-col gap-1">
-                  Add New Stock
+                  New Order
                 </ModalHeader>
                 <ModalBody>
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <Input
                       className="border border-gray-300 rounded-xl"
-                      label="Company Name"
+                      label="Customer Name"
                       type="text"
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
                       required
                     />
                     <Input
@@ -97,10 +99,10 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
                     />
                     <Input
                       className="border border-gray-300 rounded-xl"
-                      label="Stock Name"
+                      label="Order Name"
                       type="text"
-                      value={stockName}
-                      onChange={(e) => setStockName(e.target.value)}
+                      value={orderName}
+                      onChange={(e) => setOrderName(e.target.value)}
                       required
                     />
                     <Input
@@ -121,24 +123,6 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
                     />
                     <Input
                       className="border border-gray-300 rounded-xl"
-                      label="Stock Quantity"
-                      type="number"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                      required
-                    />
-                      <Dropdown>
-                        <DropdownTrigger>
-                          <Button className="w-full" variant="bordered">Select Unit</Button>
-                        </DropdownTrigger>
-                        <DropdownMenu aria-label="Dynamic Actions">
-                            <DropdownItem key="meter" >Meter</DropdownItem>
-                            <DropdownItem key="guaze" >Gauze</DropdownItem>
-                        </DropdownMenu>
-                      </Dropdown>
-
-                    <Input
-                      className="border border-gray-300 rounded-xl"
                       label="Issue Date"
                       type="date"
                       value={issueDate}
@@ -157,12 +141,12 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
                     <div className="flex flex-col gap-5">
                       <div className="flex gap-5">
                         <div className="flex gap-5">
-                          {stockImage ? (
+                          {orderImage ? (
                             <>
                               <img
-                                src={stockImage}
+                                src={orderImage}
                                 className="w-28"
-                                alt="Stock Image"
+                                alt="Order Image"
                               />
                             </>
                           ) : null}
@@ -173,17 +157,16 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
                           uploadPreset="ml_default"
                           options={{ sources: ["local", "url"] }}
                           onSuccess={(result) =>
-                            setStockImage(result.info.secure_url)
+                            setOrderImage(result.info.secure_url)
                           }
                         >
                           {({ open }) => (
-                            <Button
-                            variant="bordered"
-                              className="w-full"
-                              onPress={() => open()}
+                            <button
+                              className="text-gray-600 mt-2 font-semibold text-sm rounded-lg px-4 py-2 border border-gray-400"
+                              onClick={() => open()}
                             >
-                              Upload Stock Image
-                            </Button>
+                              Order Image
+                            </button>
                           )}
                         </CldUploadWidget>
                       </div>
@@ -197,6 +180,7 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
                         {loading ? "Adding..." : "Add"}
                       </Button>
                     </ModalFooter>
+
                   </form>
                 </ModalBody>
               </>

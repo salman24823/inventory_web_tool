@@ -23,37 +23,35 @@ import { Pencil } from "lucide-react";
 import { Check } from "lucide-react";
 import { Plus } from "lucide-react";
 
-export default function Stock() {
+export default function Inventory() {
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [selectedMonth, setSelectedMonth] = useState("Select Month");
   const [selectedYear, setSelectedYear] = useState("Select Year");
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [Stocks, setStocks] = useState([]);
+  const [orders, setOrders] = useState([]);
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  const fetchStocks = async () => {
-    setIsLoading(false);
-
-    return
+  const fetchOrders = async () => {
+    setIsLoading(true);
 
     try {
-      const response = await fetch("/api/handleStock");
+      const response = await fetch("/api/handleOrder");
       if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
-      setStocks(data);
+      setOrders(data);
 
       setIsLoading(false);
     } catch (error) {
-      console.error("Error fetching Stocks:", error);
+      console.error("Error fetching orders:", error);
     }
   };
 
   useEffect(() => {
-    fetchStocks();
+    fetchOrders();
   }, []);
 
   const months = [
@@ -85,21 +83,23 @@ export default function Stock() {
     "2035",
   ];
 
-  const filteredStocks = Stocks.filter((Stock) => {
-    // Determine stock status based on stock quantity
-    const stockStatus =
-      Stock.quantity > 0
-        ? "in-stock"
-        : Stock.quantity === 0
-        ? "out-of-stock"
+  const filteredOrders = orders.filter((order) => {
+    // Determine payment status based on totalPending
+    const paymentStatus =
+      order.totalPrice === order.amountPaid
+        ? "paid"
+        : order.totalPrice !== order.amountPaid
+        ? "pending"
+        : new Date() == new Date(order.lastCheckout)
+        ? "overdue"
         : null;
 
     const matchesFilter =
       selectedFilter === "All" ||
-      stockStatus === selectedFilter.toLowerCase();
+      paymentStatus === selectedFilter.toLowerCase();
 
     // Extract month and year from lastCheckout
-    const checkoutDate = new Date(Stock.lastCheckout);
+    const checkoutDate = new Date(order.lastCheckout);
     const checkoutMonth = checkoutDate.toLocaleString("en-US", {
       month: "long",
     });
@@ -114,17 +114,17 @@ export default function Stock() {
     return matchesFilter && matchesMonth && matchesYear;
   });
 
-  async function DeleteStock(e, id) {
+  async function DeleteOrder(e, id) {
     e.preventDefault(); // Prevent default event behavior
-    setLoading(id); // Set loading state for this specific Stock
+    setLoading(id); // Set loading state for this specific order
 
-    if (!window.confirm("Are you sure you want to delete this Stock?")) {
+    if (!window.confirm("Are you sure you want to delete this order?")) {
       setLoading(false);
       return;
     }
 
     try {
-      const response = await fetch("/api/handleStock", {
+      const response = await fetch("/api/handleOrder", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
@@ -135,7 +135,7 @@ export default function Stock() {
       }
 
       toast.success("Successfully Deleted");
-      fetchStocks();
+      fetchOrders();
     } catch (error) {
       console.error(error);
       toast.error("Error in Deleting");
@@ -149,10 +149,10 @@ export default function Stock() {
   async function handleConfirm() {
     
     try {
-      const response = await fetch("/api/handleStock", {
+      const response = await fetch("/api/handleOrder", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ Stocks }),
+        body: JSON.stringify({ orders }),
       });
 
       if (!response.ok) {
@@ -160,7 +160,7 @@ export default function Stock() {
       }
 
       toast.success("Successfully updated");
-      fetchStocks();
+      fetchOrders();
       setEditing(false);
     } catch (error) {
       console.error(error);
@@ -184,7 +184,7 @@ export default function Stock() {
             <Dropdown placement="bottom-start">
               <DropdownTrigger>
                 <Button
-                  variant="bStocked"
+                  variant="bordered"
                   className="w-40 flex justify-between"
                 >
                   {selectedFilter}
@@ -192,7 +192,7 @@ export default function Stock() {
                 </Button>
               </DropdownTrigger>
               <DropdownMenu>
-                {["All", "In-Stock", "Out-of-Stock"].map((option) => (
+                {["All", "Paid", "Pending", "Overdue"].map((option) => (
                   <DropdownItem
                     key={option}
                     onPress={() => setSelectedFilter(option)}
@@ -206,7 +206,7 @@ export default function Stock() {
             <Dropdown placement="bottom-start">
               <DropdownTrigger>
                 <Button
-                  variant="bStocked"
+                  variant="bordered"
                   className="w-40 flex justify-between"
                 >
                   {selectedMonth}
@@ -228,7 +228,7 @@ export default function Stock() {
             <Dropdown placement="bottom-start">
               <DropdownTrigger>
                 <Button
-                  variant="bStocked"
+                  variant="bordered"
                   className="w-40 flex justify-between"
                 >
                   {selectedYear}
@@ -276,7 +276,7 @@ export default function Stock() {
               onPress={onOpen}
               className="bg-blue-500 text-white font-semibold text-sm"
             >
-              Add New Stock <Plus className="w-5" />
+              Add New Order <Plus className="w-5" />
             </Button>
           </div>
         </div>
@@ -289,30 +289,28 @@ export default function Stock() {
       ) : (
         <Table
           className="overflow-x-scroll text-nowrap custom-scrollbar"
-          aria-label="Stock analysis table"
+          aria-label="Order analysis table"
           loading={isLoading}
         >
           <TableHeader>
             <TableColumn>#</TableColumn>
-            <TableColumn>COMPANY NAME / PHONE</TableColumn>
-            <TableColumn>STOCK</TableColumn>
-            <TableColumn>STOCK TITLE</TableColumn>
+            <TableColumn>CUSTOMER</TableColumn>
+            <TableColumn>ORDER</TableColumn>
+            <TableColumn>TITLE</TableColumn>
             <TableColumn>TOTAL</TableColumn>
             <TableColumn>PAID</TableColumn>
             <TableColumn>PENDING</TableColumn>
             <TableColumn>STATUS</TableColumn>
-            <TableColumn>STOCK QUANTITY</TableColumn>
-            <TableColumn>STOCK STATUS</TableColumn>
             <TableColumn>ISSUE DATE</TableColumn>
-            <TableColumn>DEADLINE</TableColumn>
+            <TableColumn>DUE DATE</TableColumn>
             <TableColumn>ACTION</TableColumn>
           </TableHeader>
 
-          <TableBody emptyContent="No Stocks Found">
-            {filteredStocks
+          <TableBody emptyContent="No Orders Found">
+            {filteredOrders
               .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-              .map((Stock, index) => (
-                <TableRow className="hover:bg-gray-100" key={Stock._id}>
+              .map((order, index) => (
+                <TableRow className="hover:bg-gray-100" key={order._id}>
                   <TableCell>{index + 1}</TableCell>
 
                   <TableCell className="max-w-52">
@@ -321,48 +319,48 @@ export default function Stock() {
                         {editing ? (
                           <input
                             type="text"
-                            className="bStock px-2 py-1 w-full"
-                            value={Stock.companyName}
+                            className="border px-2 py-1 w-full"
+                            value={order.name}
                             onChange={(e) => {
-                              const updatedStocks = Stocks.map((o) =>
-                                o._id === Stock._id
+                              const updatedOrders = orders.map((o) =>
+                                o._id === order._id
                                   ? { ...o, name: e.target.value }
                                   : o
                               );
-                              setStocks(updatedStocks);
+                              setOrders(updatedOrders);
                             }}
                           />
                         ) : (
-                          <p className="font-semibold">{Stock.name}</p>
+                          <p className="font-semibold">{order.name}</p>
                         )}
 
                         {editing ? (
                           <input
                             type="text"
-                            className="bStock px-2 py-1 w-full"
-                            value={Stock.phone}
+                            className="border px-2 py-1 w-full"
+                            value={order.phone}
                             onChange={(e) => {
-                              const updatedStocks = Stocks.map((o) =>
-                                o._id === Stock._id
+                              const updatedOrders = orders.map((o) =>
+                                o._id === order._id
                                   ? { ...o, phone: e.target.value }
                                   : o
                               );
-                              setStocks(updatedStocks);
+                              setOrders(updatedOrders);
                             }}
                           />
                         ) : (
-                          <p className="text-sm text-gray-500">{Stock.phone}</p>
+                          <p className="text-sm text-gray-500">{order.phone}</p>
                         )}
                       </div>
                     </div>
                   </TableCell>
 
                   <TableCell>
-                    {Stock.StockImage ? (
+                    {order.orderImage ? (
                       <img
-                        src={Stock.StockImage}
+                        src={order.orderImage}
                         className="w-10 h-10"
-                        alt="Stock"
+                        alt="Order"
                       />
                     ) : (
                       "No Image"
@@ -373,19 +371,19 @@ export default function Stock() {
                     {editing ? (
                       <input
                         type="text"
-                        className="bStock px-2 py-1 w-full"
-                        value={Stock.StockName}
+                        className="border px-2 py-1 w-full"
+                        value={order.orderName}
                         onChange={(e) => {
-                          const updatedStocks = Stocks.map((o) =>
-                            o._id === Stock._id
-                              ? { ...o, StockName: e.target.value }
+                          const updatedOrders = orders.map((o) =>
+                            o._id === order._id
+                              ? { ...o, orderName: e.target.value }
                               : o
                           );
-                          setStocks(updatedStocks);
+                          setOrders(updatedOrders);
                         }}
                       />
                     ) : (
-                      <p className="text-sm text-gray-500">{Stock.StockName}</p>
+                      <p className="text-sm text-gray-500">{order.orderName}</p>
                     )}
                   </TableCell>
 
@@ -393,19 +391,19 @@ export default function Stock() {
                     {editing ? (
                       <input
                         type="text"
-                        className="bStock px-2 py-1 w-full"
-                        value={Stock.totalPrice}
+                        className="border px-2 py-1 w-full"
+                        value={order.totalPrice}
                         onChange={(e) => {
-                          const updatedStocks = Stocks.map((o) =>
-                            o._id === Stock._id
+                          const updatedOrders = orders.map((o) =>
+                            o._id === order._id
                               ? { ...o, totalPrice: e.target.value }
                               : o
                           );
-                          setStocks(updatedStocks);
+                          setOrders(updatedOrders);
                         }}
                       />
                     ) : (
-                      <p className="text-sm">{Stock.totalPrice} R.S</p>
+                      <p className="text-sm">{order.totalPrice} R.S</p>
                     )}
                   </TableCell>
 
@@ -413,102 +411,70 @@ export default function Stock() {
                     {editing ? (
                       <input
                         type="text"
-                        className="bStock px-2 py-1 w-full"
-                        value={Stock.amountPaid}
+                        className="border px-2 py-1 w-full"
+                        value={order.amountPaid}
                         onChange={(e) => {
-                          const updatedStocks = Stocks.map((o) =>
-                            o._id === Stock._id
+                          const updatedOrders = orders.map((o) =>
+                            o._id === order._id
                               ? { ...o, amountPaid: e.target.value }
                               : o
                           );
-                          setStocks(updatedStocks);
+                          setOrders(updatedOrders);
                         }}
                       />
                     ) : (
                       <p
                         className={` ${
-                          Stock.amountPaid == 0
+                          order.amountPaid == 0
                             ? "text-black"
                             : "text-green-600 font-semibold"
                         }`}
                       >
-                        {Stock.amountPaid} R.S
+                        {order.amountPaid} R.S
                       </p>
                     )}
                   </TableCell>
 
                   <TableCell className="text-nowrap">
                     {" "}
-                    {Stock.totalPrice - Stock.amountPaid} R.S
+                    {order.totalPrice - order.amountPaid} R.S
                   </TableCell>
 
                   <TableCell>
                     <span
                       className={`px-4 text-xs py-1 rounded-full  ${
-                        Stock.totalPrice === Stock.amountPaid
+                        order.totalPrice === order.amountPaid
                           ? "bg-green-100 text-green-700" // Paid
-                          : new Date() > new Date(Stock.deadline)
+                          : new Date() > new Date(order.deadline)
                           ? "bg-red-100 text-red-700" // Overdue
                           : "bg-yellow-100 text-yellow-700" // Pending
                       }`}
                     >
-                      {Stock.totalPrice === Stock.amountPaid
+                      {order.totalPrice === order.amountPaid
                         ? "Paid"
-                        : new Date() > new Date(Stock.deadline)
+                        : new Date() > new Date(order.deadline)
                         ? "Overdue"
                         : "Pending"}
                     </span>
                   </TableCell>
 
-                  <TableCell>
-                    {editing ? (
-                      <input
-                        type="number"
-                        className="bStock px-2 py-1 w-full"
-                        value={Stock.quantity}
-                        onChange={(e) => {
-                          const updatedStocks = Stocks.map((o) =>
-                            o._id === Stock._id
-                              ? { ...o, quantity: e.target.value }
-                              : o
-                          );
-                          setStocks(updatedStocks);
-                        }}
-                      />
-                    ) : (
-                      <p className="text-sm">{Stock.quantity}</p>
-                    )}
-                  </TableCell>
-
-                  <TableCell>
-                    <span
-                      className={`px-4 text-xs py-1 rounded-full  ${
-                        Stock.quantity > 0
-                          ? "bg-green-100 text-green-700" // In-Stock
-                          : "bg-red-100 text-red-700" // Out-of-Stock
-                      }`}
-                    >
-                      {Stock.quantity > 0 ? "In-Stock" : "Out-of-Stock"}
-                    </span>
-                  </TableCell>
-
                   <TableCell className="text-nowrap">
                     {editing ? (
                       <input
                         type="date"
-                        className="bStock px-2 py-1 w-full"
-                        value={Stock.issueDate}
+                        className="border px-2 py-1 w-full"
+                        value={order.issueDate}
                         onChange={(e) => {
-                          const updatedStocks = Stocks.map((o) =>
-                            o._id === Stock._id
+                          const updatedOrders = orders.map((o) =>
+                            o._id === order._id
                               ? { ...o, issueDate: e.target.value }
                               : o
                           );
-                          setStocks(updatedStocks);
+                          setOrders(updatedOrders);
                         }}
                       />
                     ) : (
-                      <p className="text-sm">{Stock.issueDate}</p>
+                      <p className="text-sm">{order.issueDate}</p>
                     )}
                   </TableCell>
 
@@ -516,29 +482,29 @@ export default function Stock() {
                     {editing ? (
                       <input
                         type="date"
-                        className="bStock px-2 py-1 w-full"
-                        value={Stock.deadline}
+                        className="border px-2 py-1 w-full"
+                        value={order.deadline}
                         onChange={(e) => {
-                          const updatedStocks = Stocks.map((o) =>
-                            o._id === Stock._id
+                          const updatedOrders = orders.map((o) =>
+                            o._id === order._id
                               ? { ...o, deadline: e.target.value }
                               : o
                           );
-                          setStocks(updatedStocks);
+                          setOrders(updatedOrders);
                         }}
                       />
                     ) : (
-                      <p className="text-sm">{Stock.deadline}</p>
+                      <p className="text-sm">{order.deadline}</p>
                     )}
                   </TableCell>
 
                   <TableCell className="text-nowrap">
-                    {loading === Stock._id ? (
+                    {loading === order._id ? (
                       <Spinner size="sm" />
                     ) : (
                       <div className="flex gap-3 items-center">
                         <X
-                          onClick={(e) => DeleteStock(e, Stock._id)}
+                          onClick={(e) => DeleteOrder(e, order._id)}
                           className="text-red-600 hover:cursor-pointer"
                         />
                       </div>
@@ -553,7 +519,7 @@ export default function Stock() {
       <Action
         isOpen={isOpen}
         onOpenChange={onOpenChange}
-        fetchStocks={fetchStocks}
+        fetchOrders={fetchOrders}
       />
     </section>
   );

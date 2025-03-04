@@ -38,8 +38,13 @@ const Layout = ({ children }) => {
       icon: <User className="w-5 h-5 text-gray-600" />,
     },
     {
-      name: "Inventory",
+      name: "Orders",
       path: "/dashboard/inventory",
+      icon: <Box className="w-5 h-5 text-gray-600" />,
+    },
+    {
+      name: "Inventory",
+      path: "/dashboard/abc",
       icon: <Box className="w-5 h-5 text-gray-600" />,
     },
     // {
