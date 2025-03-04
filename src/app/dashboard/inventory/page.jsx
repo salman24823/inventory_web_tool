@@ -36,9 +36,7 @@ export default function Stock() {
   const [isLoading, setIsLoading] = React.useState(false);
 
   const fetchStocks = async () => {
-    setIsLoading(false);
-
-    return
+    setIsLoading(true);
 
     try {
       const response = await fetch("/api/handleStock");
@@ -147,7 +145,6 @@ export default function Stock() {
   }
 
   async function handleConfirm() {
-    
     try {
       const response = await fetch("/api/handleStock", {
         method: "PUT",
@@ -170,7 +167,6 @@ export default function Stock() {
         setLoading(null); // Ensure loading state lasts at least 1 sec
       }, 1000);
     }
-
   }
 
   return (
@@ -184,7 +180,7 @@ export default function Stock() {
             <Dropdown placement="bottom-start">
               <DropdownTrigger>
                 <Button
-                  variant="bStocked"
+                  variant="ghost"
                   className="w-40 flex justify-between"
                 >
                   {selectedFilter}
@@ -206,7 +202,7 @@ export default function Stock() {
             <Dropdown placement="bottom-start">
               <DropdownTrigger>
                 <Button
-                  variant="bStocked"
+                  variant="ghost"
                   className="w-40 flex justify-between"
                 >
                   {selectedMonth}
@@ -228,7 +224,7 @@ export default function Stock() {
             <Dropdown placement="bottom-start">
               <DropdownTrigger>
                 <Button
-                  variant="bStocked"
+                  variant="ghost"
                   className="w-40 flex justify-between"
                 >
                   {selectedYear}
@@ -295,6 +291,7 @@ export default function Stock() {
           <TableHeader>
             <TableColumn>#</TableColumn>
             <TableColumn>COMPANY NAME / PHONE</TableColumn>
+            <TableColumn>COMPANY LOGO</TableColumn>
             <TableColumn>STOCK</TableColumn>
             <TableColumn>STOCK TITLE</TableColumn>
             <TableColumn>TOTAL</TableColumn>
@@ -315,7 +312,7 @@ export default function Stock() {
                 <TableRow className="hover:bg-gray-100" key={Stock._id}>
                   <TableCell>{index + 1}</TableCell>
 
-                  <TableCell className="max-w-52">
+                  <TableCell className="text-nowrap">
                     <div className="flex items-center gap-3">
                       <div>
                         {editing ? (
@@ -326,14 +323,14 @@ export default function Stock() {
                             onChange={(e) => {
                               const updatedStocks = Stocks.map((o) =>
                                 o._id === Stock._id
-                                  ? { ...o, name: e.target.value }
+                                  ? { ...o, companyName: e.target.value }
                                   : o
                               );
                               setStocks(updatedStocks);
                             }}
                           />
                         ) : (
-                          <p className="font-semibold">{Stock.name}</p>
+                          <p className="font-semibold">{Stock.companyName}</p>
                         )}
 
                         {editing ? (
@@ -358,9 +355,21 @@ export default function Stock() {
                   </TableCell>
 
                   <TableCell>
-                    {Stock.StockImage ? (
+                    {Stock.companyLogo ? (
                       <img
-                        src={Stock.StockImage}
+                        src={Stock.companyLogo}
+                        className="w-10 h-10"
+                        alt="Company Logo"
+                      />
+                    ) : (
+                      "No Logo"
+                    )}
+                  </TableCell>
+
+                  <TableCell>
+                    {Stock.stockImage ? (
+                      <img
+                        src={Stock.stockImage}
                         className="w-10 h-10"
                         alt="Stock"
                       />
@@ -369,23 +378,23 @@ export default function Stock() {
                     )}
                   </TableCell>
 
-                  <TableCell className="max-w-52">
+                  <TableCell className="text-nowrap">
                     {editing ? (
                       <input
                         type="text"
                         className="bStock px-2 py-1 w-full"
-                        value={Stock.StockName}
+                        value={Stock.stockName}
                         onChange={(e) => {
                           const updatedStocks = Stocks.map((o) =>
                             o._id === Stock._id
-                              ? { ...o, StockName: e.target.value }
+                              ? { ...o, stockName: e.target.value }
                               : o
                           );
                           setStocks(updatedStocks);
                         }}
                       />
                     ) : (
-                      <p className="text-sm text-gray-500">{Stock.StockName}</p>
+                      <p className="text-sm text-gray-500">{Stock.stockName}</p>
                     )}
                   </TableCell>
 

@@ -6,7 +6,11 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  Input,Dropdown, DropdownTrigger, DropdownMenu, DropdownItem
+  Input,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from "@heroui/react";
 import { toast } from "react-toastify"; // Assuming you're using react-hot-toast for notifications
 import { CldUploadWidget } from "next-cloudinary";
@@ -20,9 +24,11 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
   const [totalPrice, setTotalPrice] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [unit, setUnit] = useState(""); // New state for selected unit
   const [issueDate, setIssueDate] = useState("");
   const [deadline, setDeadline] = useState("");
   const [stockImage, setStockImage] = useState("");
+  const [companyLogo, setCompanyLogo] = useState(""); // State for company logo
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,9 +46,11 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
           totalPrice,
           amountPaid,
           quantity,
+          unit, // Include the selected unit
           issueDate,
           deadline,
           stockImage,
+          companyLogo, // Include company logo in the request
         }),
       });
 
@@ -127,16 +135,21 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
                       onChange={(e) => setQuantity(e.target.value)}
                       required
                     />
-                      <Dropdown>
-                        <DropdownTrigger>
-                          <Button className="w-full" variant="bordered">Select Unit</Button>
-                        </DropdownTrigger>
-                        <DropdownMenu aria-label="Dynamic Actions">
-                            <DropdownItem key="meter" >Meter</DropdownItem>
-                            <DropdownItem key="guaze" >Gauze</DropdownItem>
-                        </DropdownMenu>
-                      </Dropdown>
-
+                    <Dropdown>
+                      <DropdownTrigger>
+                        <Button className="w-full" variant="bordered">
+                          {unit || "Select Unit"} {/* Display selected unit or placeholder */}
+                        </Button>
+                      </DropdownTrigger>
+                      <DropdownMenu aria-label="Dynamic Actions">
+                        <DropdownItem key="meter" onPress={() => setUnit("Meter")}>
+                          Meter
+                        </DropdownItem>
+                        <DropdownItem key="gauze" onPress={() => setUnit("Gauze")}>
+                          Gauze
+                        </DropdownItem>
+                      </DropdownMenu>
+                    </Dropdown>
                     <Input
                       className="border border-gray-300 rounded-xl"
                       label="Issue Date"
@@ -166,8 +179,18 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
                               />
                             </>
                           ) : null}
+                          {companyLogo ? (
+                            <>
+                              <img
+                                src={companyLogo}
+                                className="w-28"
+                                alt="Company Logo"
+                              />
+                            </>
+                          ) : null}
                         </div>
                       </div>
+
                       <div className="flex gap-5">
                         <CldUploadWidget
                           uploadPreset="ml_default"
@@ -178,11 +201,31 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
                         >
                           {({ open }) => (
                             <Button
-                            variant="bordered"
+                              variant="bordered"
                               className="w-full"
-                              onPress={() => open()}
+                              onPress={() => open()} // Use onPress for Button
                             >
                               Upload Stock Image
+                            </Button>
+                          )}
+                        </CldUploadWidget>
+                      </div>
+
+                      <div className="flex gap-5">
+                        <CldUploadWidget
+                          uploadPreset="ml_default"
+                          options={{ sources: ["local", "url"] }}
+                          onSuccess={(result) =>
+                            setCompanyLogo(result.info.secure_url)
+                          }
+                        >
+                          {({ open }) => (
+                            <Button
+                              variant="bordered"
+                              className="w-full"
+                              onPress={() => open()} // Use onPress for Button
+                            >
+                              Upload Company Logo
                             </Button>
                           )}
                         </CldUploadWidget>
