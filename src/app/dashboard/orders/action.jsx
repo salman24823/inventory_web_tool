@@ -71,6 +71,7 @@ export default function Action({ fetchOrders, isOpen, onOpenChange }) {
           issueDate,
           deadline,
           orderImage,
+          stockId,
         }),
       });
       if (!response.ok) throw new Error("Failed to Upload");

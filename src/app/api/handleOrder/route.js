@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import dbConnection from "@/config/dbConnection";
 import orderModel from "@/Models/orderModel";
+import stockModel from "@/Models/stockModel";
 
 export async function GET() {
   await dbConnection();
@@ -29,6 +30,7 @@ export async function POST(req) {
       issueDate,
       deadline,
       orderImage,
+      stockId
     } = data;
 
     console.log(data, "data");
@@ -41,7 +43,8 @@ export async function POST(req) {
       !totalPrice ||
       !amountPaid ||
       !issueDate ||
-      !deadline
+      !deadline ||
+      !stockId
     ) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -60,6 +63,9 @@ export async function POST(req) {
       deadline,
       orderImage,
     });
+
+    const updatedStock = await stockModel.findByIdAndUpdate(stockId, { $inc: { quantity: -quantity } })
+    console.log(updatedStock,"updatedStock")
 
     console.log(newOrder, "newOrder");
 
