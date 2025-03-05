@@ -135,6 +135,8 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
                       onChange={(e) => setQuantity(e.target.value)}
                       required
                     />
+
+
                     <Dropdown>
                       <DropdownTrigger>
                         <Button className="w-full" variant="bordered">
@@ -150,6 +152,8 @@ export default function Action({ fetchStocks, isOpen, onOpenChange }) {
                         </DropdownItem>
                       </DropdownMenu>
                     </Dropdown>
+
+                    
                     <Input
                       className="border border-gray-300 rounded-xl"
                       label="Issue Date"

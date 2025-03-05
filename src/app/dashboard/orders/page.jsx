@@ -147,7 +147,6 @@ export default function Inventory() {
   }
 
   async function handleConfirm() {
-    
     try {
       const response = await fetch("/api/handleOrder", {
         method: "PUT",
@@ -170,8 +169,8 @@ export default function Inventory() {
         setLoading(null); // Ensure loading state lasts at least 1 sec
       }, 1000);
     }
-
   }
+
 
   return (
     <section className="w-full flex flex-col gap-4">
@@ -300,6 +299,7 @@ export default function Inventory() {
             <TableColumn>TOTAL</TableColumn>
             <TableColumn>PAID</TableColumn>
             <TableColumn>PENDING</TableColumn>
+            <TableColumn>QUANTITY</TableColumn>
             <TableColumn>STATUS</TableColumn>
             <TableColumn>ISSUE DATE</TableColumn>
             <TableColumn>DUE DATE</TableColumn>
@@ -440,6 +440,28 @@ export default function Inventory() {
                     {order.totalPrice - order.amountPaid} R.S
                   </TableCell>
 
+                  <TableCell className="text-nowrap">
+                    {editing ? (
+                      <input
+                        type="text"
+                        className="border px-2 py-1 w-full"
+                        value={order.quantity}
+                        onChange={(e) => {
+                          const updatedOrders = orders.map((o) =>
+                            o._id === order._id
+                              ? { ...o, quantity: e.target.value }
+                              : o
+                          );
+                          setOrders(updatedOrders);
+                        }}
+                      />
+                    ) : (
+                      <p onClick={()=> console.log(order,"order") } >
+                        {order.quantity} {order.unit}
+                      </p>
+                    )}
+                  </TableCell>
+
                   <TableCell>
                     <span
                       className={`px-4 text-xs py-1 rounded-full  ${
@@ -457,6 +479,8 @@ export default function Inventory() {
                         : "Pending"}
                     </span>
                   </TableCell>
+
+                
 
                   <TableCell className="text-nowrap">
                     {editing ? (

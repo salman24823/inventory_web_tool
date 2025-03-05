@@ -22,7 +22,8 @@ export async function POST(req) {
     const {
       name,
       phone,
-      orderName,
+      stockName,
+      quantity,
       totalPrice,
       amountPaid,
       issueDate,
@@ -30,16 +31,17 @@ export async function POST(req) {
       orderImage,
     } = data;
 
-    console.log(data,"data")
+    console.log(data, "data");
 
     if (
       !name ||
       !phone ||
-      !orderName ||
+      !stockName ||
+      !quantity ||
       !totalPrice ||
       !amountPaid ||
       !issueDate ||
-      !deadline 
+      !deadline
     ) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -50,7 +52,8 @@ export async function POST(req) {
     const newOrder = await orderModel.create({
       name,
       phone,
-      orderName,
+      orderName : stockName,
+      quantity,
       totalPrice,
       amountPaid,
       issueDate,
@@ -58,7 +61,7 @@ export async function POST(req) {
       orderImage,
     });
 
-    console.log(newOrder,"newOrder")
+    console.log(newOrder, "newOrder");
 
     return NextResponse.json(
       { success: true, order: newOrder },
@@ -108,7 +111,6 @@ export async function DELETE(req) {
   }
 }
 
-
 export async function PUT(req) {
   await dbConnection(); // Ensure DB connection
   try {
@@ -126,7 +128,9 @@ export async function PUT(req) {
     const updatedOrders = await Promise.all(
       orders.map(async (order) => {
         const { _id, ...updateData } = order;
-        return await orderModel.findByIdAndUpdate(_id, updateData, { new: true });
+        return await orderModel.findByIdAndUpdate(_id, updateData, {
+          new: true,
+        });
       })
     );
 

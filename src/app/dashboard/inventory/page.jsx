@@ -93,8 +93,7 @@ export default function Stock() {
         : null;
 
     const matchesFilter =
-      selectedFilter === "All" ||
-      stockStatus === selectedFilter.toLowerCase();
+      selectedFilter === "All" || stockStatus === selectedFilter.toLowerCase();
 
     // Extract month and year from lastCheckout
     const checkoutDate = new Date(Stock.lastCheckout);
@@ -149,7 +148,7 @@ export default function Stock() {
       const response = await fetch("/api/handleStock", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ Stocks }),
+        body: JSON.stringify(Stocks),
       });
 
       if (!response.ok) {
@@ -179,10 +178,7 @@ export default function Stock() {
           <div className="relative flex gap-3 items-center">
             <Dropdown placement="bottom-start">
               <DropdownTrigger>
-                <Button
-                  variant="ghost"
-                  className="w-40 flex justify-between"
-                >
+                <Button variant="ghost" className="w-40 flex justify-between">
                   {selectedFilter}
                   <ChevronDown className="text-gray-500" />
                 </Button>
@@ -201,10 +197,7 @@ export default function Stock() {
 
             <Dropdown placement="bottom-start">
               <DropdownTrigger>
-                <Button
-                  variant="ghost"
-                  className="w-40 flex justify-between"
-                >
+                <Button variant="ghost" className="w-40 flex justify-between">
                   {selectedMonth}
                   <ChevronDown className="text-gray-500" />
                 </Button>
@@ -223,10 +216,7 @@ export default function Stock() {
 
             <Dropdown placement="bottom-start">
               <DropdownTrigger>
-                <Button
-                  variant="ghost"
-                  className="w-40 flex justify-between"
-                >
+                <Button variant="ghost" className="w-40 flex justify-between">
                   {selectedYear}
                   <ChevronDown className="text-gray-500" />
                 </Button>
@@ -289,36 +279,36 @@ export default function Stock() {
           loading={isLoading}
         >
           <TableHeader>
-            <TableColumn>#</TableColumn>
-            <TableColumn>COMPANY NAME / PHONE</TableColumn>
-            <TableColumn>COMPANY LOGO</TableColumn>
-            <TableColumn>STOCK</TableColumn>
-            <TableColumn>STOCK TITLE</TableColumn>
-            <TableColumn>TOTAL</TableColumn>
-            <TableColumn>PAID</TableColumn>
-            <TableColumn>PENDING</TableColumn>
-            <TableColumn>STATUS</TableColumn>
-            <TableColumn>STOCK QUANTITY</TableColumn>
-            <TableColumn>STOCK STATUS</TableColumn>
-            <TableColumn>ISSUE DATE</TableColumn>
-            <TableColumn>DEADLINE</TableColumn>
-            <TableColumn>ACTION</TableColumn>
+            <TableColumn >#</TableColumn>
+            <TableColumn className="min-w-36" >COMPANY NAME / PHONE</TableColumn>
+            <TableColumn className="min-w-36" >COMPANY LOGO</TableColumn>
+            <TableColumn className="min-w-36" >STOCK</TableColumn>
+            <TableColumn className="min-w-36" >STOCK TITLE</TableColumn>
+            <TableColumn className="min-w-36" >TOTAL</TableColumn>
+            <TableColumn className="min-w-36" >PAID</TableColumn>
+            <TableColumn className="min-w-36" >PENDING</TableColumn>
+            <TableColumn className="min-w-36" >STATUS</TableColumn>
+            <TableColumn className="min-w-36" >STOCK QUANTITY</TableColumn>
+            <TableColumn className="min-w-36" >STOCK STATUS</TableColumn>
+            <TableColumn className="min-w-36" >ISSUE DATE</TableColumn>
+            <TableColumn className="min-w-36" >DEADLINE</TableColumn>
+            <TableColumn >ACTION</TableColumn>
           </TableHeader>
 
           <TableBody emptyContent="No Stocks Found">
             {filteredStocks
               .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
               .map((Stock, index) => (
-                <TableRow className="hover:bg-gray-100" key={Stock._id}>
+                <TableRow className="hover:bg-gray-100 space-x-10" key={Stock._id}>
                   <TableCell>{index + 1}</TableCell>
 
                   <TableCell className="text-nowrap">
                     <div className="flex items-center gap-3">
-                      <div>
+                      <div className="flex flex-col">
                         {editing ? (
                           <input
                             type="text"
-                            className="bStock px-2 py-1 w-full"
+                            className="bStock border border-gray-300 px-2 py-1 w-full"
                             value={Stock.companyName}
                             onChange={(e) => {
                               const updatedStocks = Stocks.map((o) =>
@@ -336,7 +326,7 @@ export default function Stock() {
                         {editing ? (
                           <input
                             type="text"
-                            className="bStock px-2 py-1 w-full"
+                            className="bStock border border-gray-300 px-2 py-1 w-full"
                             value={Stock.phone}
                             onChange={(e) => {
                               const updatedStocks = Stocks.map((o) =>
@@ -366,7 +356,7 @@ export default function Stock() {
                     )}
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell className="text-nowrap">
                     {Stock.stockImage ? (
                       <img
                         src={Stock.stockImage}
@@ -382,7 +372,7 @@ export default function Stock() {
                     {editing ? (
                       <input
                         type="text"
-                        className="bStock px-2 py-1 w-full"
+                        className="bStock border border-gray-300 px-2 py-1 w-full"
                         value={Stock.stockName}
                         onChange={(e) => {
                           const updatedStocks = Stocks.map((o) =>
@@ -398,11 +388,11 @@ export default function Stock() {
                     )}
                   </TableCell>
 
-                  <TableCell>
+                  <TableCell className="text-nowrap">
                     {editing ? (
                       <input
                         type="text"
-                        className="bStock px-2 py-1 w-full"
+                        className="bStock border border-gray-300 px-2 py-1 w-full"
                         value={Stock.totalPrice}
                         onChange={(e) => {
                           const updatedStocks = Stocks.map((o) =>
@@ -422,7 +412,7 @@ export default function Stock() {
                     {editing ? (
                       <input
                         type="text"
-                        className="bStock px-2 py-1 w-full"
+                        className="bStock border border-gray-300 px-2 py-1 w-full"
                         value={Stock.amountPaid}
                         onChange={(e) => {
                           const updatedStocks = Stocks.map((o) =>
@@ -473,7 +463,7 @@ export default function Stock() {
                     {editing ? (
                       <input
                         type="number"
-                        className="bStock px-2 py-1 w-full"
+                        className="bStock border border-gray-300 px-2 py-1 w-full"
                         value={Stock.quantity}
                         onChange={(e) => {
                           const updatedStocks = Stocks.map((o) =>
@@ -485,7 +475,7 @@ export default function Stock() {
                         }}
                       />
                     ) : (
-                      <p className="text-sm">{Stock.quantity}</p>
+                      <p className="text-sm text-gray-700"> <span className="text-black font-semibold"> {Stock.quantity} </span> {Stock.unit} </p>
                     )}
                   </TableCell>
 
@@ -505,7 +495,7 @@ export default function Stock() {
                     {editing ? (
                       <input
                         type="date"
-                        className="bStock px-2 py-1 w-full"
+                        className="bStock border border-gray-300 px-2 py-1 w-full"
                         value={Stock.issueDate}
                         onChange={(e) => {
                           const updatedStocks = Stocks.map((o) =>
@@ -517,7 +507,11 @@ export default function Stock() {
                         }}
                       />
                     ) : (
-                      <p className="text-sm">{Stock.issueDate}</p>
+                      <p className="text-sm">
+                        {new Date(Stock.issueDate).toLocaleDateString("en-PK", {
+                          timeZone: "Asia/Karachi",
+                        })}
+                      </p>
                     )}
                   </TableCell>
 
@@ -525,7 +519,7 @@ export default function Stock() {
                     {editing ? (
                       <input
                         type="date"
-                        className="bStock px-2 py-1 w-full"
+                        className="bStock border border-gray-300 px-2 py-1 w-full"
                         value={Stock.deadline}
                         onChange={(e) => {
                           const updatedStocks = Stocks.map((o) =>
@@ -537,7 +531,11 @@ export default function Stock() {
                         }}
                       />
                     ) : (
-                      <p className="text-sm">{Stock.deadline}</p>
+                      <p className="text-sm">
+                        {new Date(Stock.deadline).toLocaleDateString("en-PK", {
+                          timeZone: "Asia/Karachi",
+                        })}
+                      </p>
                     )}
                   </TableCell>
 

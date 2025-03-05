@@ -14,6 +14,7 @@ import { Activity } from "lucide-react";
 import { HandCoins } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { toast } from "react-toastify";
+import { Album } from "lucide-react";
 
 const Layout = ({ children }) => {
   const pathname = usePathname();
@@ -38,14 +39,14 @@ const Layout = ({ children }) => {
       icon: <User className="w-5 h-5 text-gray-600" />,
     },
     {
-      name: "Orders",
+      name: "Inventory",
       path: "/dashboard/inventory",
       icon: <Box className="w-5 h-5 text-gray-600" />,
     },
     {
-      name: "Inventory",
-      path: "/dashboard/abc",
-      icon: <Box className="w-5 h-5 text-gray-600" />,
+      name: "Order",
+      path: "/dashboard/orders",
+      icon: <Album className="w-5 h-5 text-gray-600" />,
     },
     // {
     //   name: "Sales",
