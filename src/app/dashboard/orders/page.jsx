@@ -22,6 +22,7 @@ import { toast } from "react-toastify";
 import { Pencil } from "lucide-react";
 import { Check } from "lucide-react";
 import { Plus } from "lucide-react";
+import Invoice from "./Invoice";
 
 export default function Inventory() {
   const [selectedFilter, setSelectedFilter] = useState("All");
@@ -174,6 +175,7 @@ export default function Inventory() {
 
   return (
     <section className="w-full flex flex-col gap-4">
+      <Button onPress={()=> console.log(orders,"orders") }>clg</Button>
       <div className="shadow-small payment-filter flex flex-col gap-3 w-full p-4 bg-white">
         <h2 className="text-medium text-gray-700 font-normal">
           Select Filter:
@@ -441,7 +443,7 @@ export default function Inventory() {
                   </TableCell>
 
                   <TableCell className="text-nowrap">
-                    {editing ? (
+                    {/* {editing ? (
                       <input
                         type="text"
                         className="border px-2 py-1 w-full"
@@ -455,11 +457,11 @@ export default function Inventory() {
                           setOrders(updatedOrders);
                         }}
                       />
-                    ) : (
+                    ) : ( */}
                       <p onClick={()=> console.log(order,"order") } >
                         {order.quantity} {order.unit}
                       </p>
-                    )}
+                    {/* )} */}
                   </TableCell>
 
                   <TableCell>
@@ -531,7 +533,10 @@ export default function Inventory() {
                           onClick={(e) => DeleteOrder(e, order._id)}
                           className="text-red-600 hover:cursor-pointer"
                         />
+      <Invoice order={order} />
+
                       </div>
+                      
                     )}
                   </TableCell>
                 </TableRow>
@@ -545,6 +550,7 @@ export default function Inventory() {
         onOpenChange={onOpenChange}
         fetchOrders={fetchOrders}
       />
+
     </section>
   );
 }

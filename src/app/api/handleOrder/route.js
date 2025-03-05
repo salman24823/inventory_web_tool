@@ -65,7 +65,6 @@ export async function POST(req) {
     });
 
     const updatedStock = await stockModel.findByIdAndUpdate(stockId, { $inc: { quantity: -quantity } })
-    console.log(updatedStock,"updatedStock")
 
     console.log(newOrder, "newOrder");
 
