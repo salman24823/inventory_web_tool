@@ -10,6 +10,7 @@ const stockSchema = new mongoose.Schema(
     amountPaid: { type: Number },
     quantity: { type: Number },
     unit: { type: String },
+    quality: { type: String },
     issueDate: { type: Date },
     deadline: { type: Date },
     stockImage: { type: String , default : "https://5.imimg.com/data5/TestImages/GL/MI/EQ/SELLER-20488881/logo-corrugated-boxes-500x500.jpg" }, // URL for stock image

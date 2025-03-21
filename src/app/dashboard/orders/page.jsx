@@ -90,10 +90,10 @@ export default function Inventory() {
       order.totalPrice === order.amountPaid
         ? "paid"
         : order.totalPrice !== order.amountPaid
-        ? "pending"
-        : new Date() == new Date(order.lastCheckout)
-        ? "overdue"
-        : null;
+          ? "pending"
+          : new Date() == new Date(order.lastCheckout)
+            ? "overdue"
+            : null;
 
     const matchesFilter =
       selectedFilter === "All" ||
@@ -175,7 +175,7 @@ export default function Inventory() {
 
   return (
     <section className="w-full flex flex-col gap-4">
-      <Button onPress={()=> console.log(orders,"orders") }>clg</Button>
+      <Button onPress={() => console.log(orders, "orders")}>clg</Button>
       <div className="shadow-small payment-filter flex flex-col gap-3 w-full p-4 bg-white">
         <h2 className="text-medium text-gray-700 font-normal">
           Select Filter:
@@ -426,11 +426,10 @@ export default function Inventory() {
                       />
                     ) : (
                       <p
-                        className={` ${
-                          order.amountPaid == 0
+                        className={` ${order.amountPaid == 0
                             ? "text-black"
                             : "text-green-600 font-semibold"
-                        }`}
+                          }`}
                       >
                         {order.amountPaid} R.S
                       </p>
@@ -458,31 +457,30 @@ export default function Inventory() {
                         }}
                       />
                     ) : ( */}
-                      <p onClick={()=> console.log(order,"order") } >
-                        {order.quantity} {order.unit}
-                      </p>
+                    <p onClick={() => console.log(order, "order")} >
+                      {order.quantity} {order.unit}
+                    </p>
                     {/* )} */}
                   </TableCell>
 
                   <TableCell>
                     <span
-                      className={`px-4 text-xs py-1 rounded-full  ${
-                        order.totalPrice === order.amountPaid
+                      className={`px-4 text-xs py-1 rounded-full  ${order.totalPrice === order.amountPaid
                           ? "bg-green-100 text-green-700" // Paid
                           : new Date() > new Date(order.deadline)
-                          ? "bg-red-100 text-red-700" // Overdue
-                          : "bg-yellow-100 text-yellow-700" // Pending
-                      }`}
+                            ? "bg-red-100 text-red-700" // Overdue
+                            : "bg-yellow-100 text-yellow-700" // Pending
+                        }`}
                     >
                       {order.totalPrice === order.amountPaid
                         ? "Paid"
                         : new Date() > new Date(order.deadline)
-                        ? "Overdue"
-                        : "Pending"}
+                          ? "Overdue"
+                          : "Pending"}
                     </span>
                   </TableCell>
 
-                
+
 
                   <TableCell className="text-nowrap">
                     {editing ? (
@@ -533,10 +531,10 @@ export default function Inventory() {
                           onClick={(e) => DeleteOrder(e, order._id)}
                           className="text-red-600 hover:cursor-pointer"
                         />
-      <Invoice order={order} />
+                        <Invoice order={order} />
 
                       </div>
-                      
+
                     )}
                   </TableCell>
                 </TableRow>
