@@ -20,6 +20,7 @@ import Action from "./action";
 import { Spinner } from "@heroui/react";
 import { toast } from "react-toastify";
 import Detail from "./detail";
+import { Eye } from "lucide-react";
 
 export default function Stock() {
   const [selectedFilter, setSelectedFilter] = useState("All");
@@ -259,8 +260,7 @@ export default function Stock() {
               .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
               .map((Stock, index) => (
                 <TableRow
-                  onClick={()=> handleRowClick(Stock)}
-                  className="hover:bg-gray-100 hover:cursor-pointer space-x-10"
+                  className="hover:bg-gray-100 space-x-10"
                   key={Stock._id}
                 >
                   <TableCell>{index + 1}</TableCell>
@@ -329,6 +329,10 @@ export default function Stock() {
                       <Spinner size="sm" />
                     ) : (
                       <div className="flex gap-3 items-center">
+                        <Eye
+                          onClick={() => handleRowClick(Stock)}
+                          className="text-blue-600 hover:cursor-pointer" 
+                        />
                         <X
                           onClick={(e) => DeleteStock(e, Stock._id)}
                           className="text-red-600 hover:cursor-pointer"

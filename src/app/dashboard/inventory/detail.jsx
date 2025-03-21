@@ -74,16 +74,16 @@ export default function Detail({ isOpen, onOpenChange, selectedStock, fetchStock
                         <h2 className="text-lg font-semibold text-gray-700">Stock Title</h2>
                         {editing ? (
                           <Input
-                          className="border border-gray-400 rounded-none"
-                          value={stockName} onChange={(e) => setStockName(e.target.value)} />
+                            className="border border-gray-400 rounded-none"
+                            value={stockName} onChange={(e) => setStockName(e.target.value)} />
                         ) : (
                           <p className="text-gray-600">{stockName}</p>
                         )}
                       </div>
                       <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
                         <h2 className="text-lg font-semibold text-gray-700">Stock Status</h2>
-                        <p className={`font-medium ${amountPaid >= totalPrice ? "text-green-600" : "text-red-600"}`}>
-                          {amountPaid >= totalPrice ? "Available" : "Pending"}
+                        <p className={`font-medium ${selectedStock.quantity = 0 ? "text-red-600" : "text-green-600"}`}>
+                          {selectedStock.quantity = 0 ? "Out of Stock" : "In Stock"}
                         </p>
                       </div>
                       <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
@@ -92,8 +92,7 @@ export default function Detail({ isOpen, onOpenChange, selectedStock, fetchStock
                             <h2 className="text-lg font-semibold text-gray-700">Stock Quantity</h2>
                             {editing ? (
                               <Input
-className="border border-gray-400 rounded-none"
-
+                                className="border border-gray-400 rounded-none"
                                 type="number"
                                 value={quantity}
                                 onChange={(e) => setQuantity(e.target.value)}
@@ -106,7 +105,7 @@ className="border border-gray-400 rounded-none"
                             <h2 className="text-lg font-semibold text-gray-700">Stock Quality</h2>
                             {editing ? (
                               <Input
-className="border border-gray-400 rounded-none"
+                                className="border border-gray-400 rounded-none"
 
                                 type="text"
                                 value={quality}
@@ -125,7 +124,7 @@ className="border border-gray-400 rounded-none"
                             <h2 className="text-lg font-semibold text-gray-700">Total Cost</h2>
                             {editing ? (
                               <Input
-className="border border-gray-400 rounded-none"
+                                className="border border-gray-400 rounded-none"
 
                                 type="number"
                                 value={totalPrice}
@@ -147,7 +146,7 @@ className="border border-gray-400 rounded-none"
                             <h2 className="text-lg font-semibold text-gray-700">Amount Paid</h2>
                             {editing ? (
                               <Input
-className="border border-gray-400 rounded-none"
+                                className="border border-gray-400 rounded-none"
 
                                 type="number"
                                 value={amountPaid}
@@ -181,8 +180,8 @@ className="border border-gray-400 rounded-none"
                           <h1 className="text-xl font-bold text-gray-800 mt-3">
                             {editing ? (
                               <Input
-                              className="border border-gray-400 rounded-none"
-                              value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
+                                className="border border-gray-400 rounded-none"
+                                value={companyName} onChange={(e) => setCompanyName(e.target.value)} />
                             ) : (
                               companyName
                             )}
@@ -193,8 +192,8 @@ className="border border-gray-400 rounded-none"
                         <h2 className="text-lg font-semibold text-gray-700">Company Phone</h2>
                         {editing ? (
                           <Input
-                          className="border border-gray-400 rounded-none"
-                          value={phone} onChange={(e) => setPhone(e.target.value)} />
+                            className="border border-gray-400 rounded-none"
+                            value={phone} onChange={(e) => setPhone(e.target.value)} />
                         ) : (
                           <p className="text-gray-600">{phone}</p>
                         )}
@@ -203,7 +202,7 @@ className="border border-gray-400 rounded-none"
                         <h2 className="text-lg font-semibold text-gray-700">Payment Issue Date</h2>
                         {editing ? (
                           <Input
-className="border border-gray-400 rounded-none"
+                            className="border border-gray-400 rounded-none"
 
                             type="date"
                             value={issueDate}
@@ -223,7 +222,7 @@ className="border border-gray-400 rounded-none"
                         <h2 className="text-lg font-semibold text-gray-700">Payment Deadline</h2>
                         {editing ? (
                           <Input
-className="border border-gray-400 rounded-none"
+                            className="border border-gray-400 rounded-none"
 
                             type="date"
                             value={deadline}
@@ -238,7 +237,7 @@ className="border border-gray-400 rounded-none"
                 </div>
               </ModalBody>
               <ModalFooter>
-              
+
                 {editing ? (
                   <Button color="danger" variant="light" onPress={() => setEditing(false)}>
                     Cancel

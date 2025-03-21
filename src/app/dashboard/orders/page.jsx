@@ -427,8 +427,8 @@ export default function Inventory() {
                     ) : (
                       <p
                         className={` ${order.amountPaid == 0
-                            ? "text-black"
-                            : "text-green-600 font-semibold"
+                          ? "text-black"
+                          : "text-green-600 font-semibold"
                           }`}
                       >
                         {order.amountPaid} R.S
@@ -466,10 +466,10 @@ export default function Inventory() {
                   <TableCell>
                     <span
                       className={`px-4 text-xs py-1 rounded-full  ${order.totalPrice === order.amountPaid
-                          ? "bg-green-100 text-green-700" // Paid
-                          : new Date() > new Date(order.deadline)
-                            ? "bg-red-100 text-red-700" // Overdue
-                            : "bg-yellow-100 text-yellow-700" // Pending
+                        ? "bg-green-100 text-green-700" // Paid
+                        : new Date() > new Date(order.deadline)
+                          ? "bg-red-100 text-red-700" // Overdue
+                          : "bg-yellow-100 text-yellow-700" // Pending
                         }`}
                     >
                       {order.totalPrice === order.amountPaid
