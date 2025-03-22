@@ -18,6 +18,7 @@ export async function GET() {
 
 export async function POST(req) {
   await dbConnection();
+  
   try {
     const data = await req.json();
     const {
@@ -30,21 +31,22 @@ export async function POST(req) {
       issueDate,
       deadline,
       orderImage,
-      stockId
+      stockId,
+      quality,
+      transactionType,
     } = data;
 
-    console.log(data, "data");
+    console.log(data, "Received Order Data");
 
+    // Convert necessary fields to numbers
+    const quantityNum = Number(quantity);
+    const amountPaidNum = Number(amountPaid);
+
+    // Validate required fields
     if (
-      !name ||
-      !phone ||
-      !stockName ||
-      !quantity ||
-      !totalPrice ||
-      !amountPaid ||
-      !issueDate ||
-      !deadline ||
-      !stockId
+      !name || !phone || !stockName || !quantityNum || 
+      !totalPrice || !amountPaidNum || !issueDate || 
+      !deadline || !stockId || !transactionType
     ) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -52,21 +54,49 @@ export async function POST(req) {
       );
     }
 
+    // Validate amountPaid against totalPrice
+    if (amountPaidNum > totalPrice) {
+      return NextResponse.json(
+        { error: "Amount paid cannot exceed total price" },
+        { status: 400 }
+      );
+    }
+
+    // Check stock availability
+    const selectedStock = await stockModel.findById(stockId);
+    if (!selectedStock) {
+      return NextResponse.json(
+        { error: "Stock item not found" },
+        { status: 404 }
+      );
+    }
+
+    if (quantityNum > selectedStock.quantity) {
+      return NextResponse.json(
+        { error: "Quantity exceeds available stock" },
+        { status: 400 }
+      );
+    }
+
+    // Create order
     const newOrder = await orderModel.create({
       name,
       phone,
-      orderName : stockName,
-      quantity,
+      orderName: stockName,
+      quantity: quantityNum,
       totalPrice,
-      amountPaid,
+      amountPaid: amountPaidNum,
       issueDate,
       deadline,
       orderImage,
+      quality,
+      installments: [{ amount: amountPaidNum, transactionType }], // Store first installment
     });
 
-    const updatedStock = await stockModel.findByIdAndUpdate(stockId, { $inc: { quantity: -quantity } })
+    // Update stock only if order creation succeeds
+    await stockModel.findByIdAndUpdate(stockId, { $inc: { quantity: -quantityNum } });
 
-    console.log(newOrder, "newOrder");
+    console.log(newOrder, "New Order Created");
 
     return NextResponse.json(
       { success: true, order: newOrder },

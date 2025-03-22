@@ -170,7 +170,7 @@ export default function Action({ fetchStocks }) {
                           </DropdownItem>
                           <DropdownItem
                             key="yard"
-                            onPress={() => setUnit("yard")}
+                            onPress={() => setUnit("Yard")}
                           >
                             Yard
                           </DropdownItem>

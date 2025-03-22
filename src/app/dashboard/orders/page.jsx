@@ -21,8 +21,9 @@ import { Spinner } from "@heroui/react";
 import { toast } from "react-toastify";
 import { Pencil } from "lucide-react";
 import { Check } from "lucide-react";
-import { Plus } from "lucide-react";
 import Invoice from "./Invoice";
+import { Eye } from "lucide-react";
+import Detail from "./detail";
 
 export default function Inventory() {
   const [selectedFilter, setSelectedFilter] = useState("All");
@@ -31,6 +32,8 @@ export default function Inventory() {
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [orders, setOrders] = useState([]);
+
+  const [selectedOrder, setSelectedOrder] = useState([]);
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
@@ -172,6 +175,11 @@ export default function Inventory() {
     }
   }
 
+  function ModalAction(order){
+    console.log(order,"selected order")
+    setSelectedOrder(order);
+    onOpen()
+  }
 
   return (
     <section className="w-full flex flex-col gap-4">
@@ -273,12 +281,10 @@ export default function Inventory() {
               </Button>
             )}
 
-            <Button
-              onPress={onOpen}
-              className="bg-blue-500 text-white font-semibold text-sm"
-            >
-              Add New Order <Plus className="w-5" />
-            </Button>
+            <Action
+              fetchOrders={fetchOrders}
+            />
+
           </div>
         </div>
       </div>
@@ -295,15 +301,11 @@ export default function Inventory() {
         >
           <TableHeader>
             <TableColumn>#</TableColumn>
-            <TableColumn>CUSTOMER</TableColumn>
+            <TableColumn>PARTY</TableColumn>
             <TableColumn>ORDER</TableColumn>
             <TableColumn>TITLE</TableColumn>
-            <TableColumn>TOTAL</TableColumn>
-            <TableColumn>PAID</TableColumn>
             <TableColumn>PENDING</TableColumn>
-            <TableColumn>QUANTITY</TableColumn>
             <TableColumn>STATUS</TableColumn>
-            <TableColumn>ISSUE DATE</TableColumn>
             <TableColumn>DUE DATE</TableColumn>
             <TableColumn>ACTION</TableColumn>
           </TableHeader>
@@ -318,41 +320,8 @@ export default function Inventory() {
                   <TableCell className="max-w-52">
                     <div className="flex items-center gap-3">
                       <div>
-                        {editing ? (
-                          <input
-                            type="text"
-                            className="border px-2 py-1 w-full"
-                            value={order.name}
-                            onChange={(e) => {
-                              const updatedOrders = orders.map((o) =>
-                                o._id === order._id
-                                  ? { ...o, name: e.target.value }
-                                  : o
-                              );
-                              setOrders(updatedOrders);
-                            }}
-                          />
-                        ) : (
-                          <p className="font-semibold">{order.name}</p>
-                        )}
-
-                        {editing ? (
-                          <input
-                            type="text"
-                            className="border px-2 py-1 w-full"
-                            value={order.phone}
-                            onChange={(e) => {
-                              const updatedOrders = orders.map((o) =>
-                                o._id === order._id
-                                  ? { ...o, phone: e.target.value }
-                                  : o
-                              );
-                              setOrders(updatedOrders);
-                            }}
-                          />
-                        ) : (
-                          <p className="text-sm text-gray-500">{order.phone}</p>
-                        )}
+                        <p className="font-semibold">{order.name}</p>
+                        <p className="text-sm text-gray-500">{order.phone}</p>
                       </div>
                     </div>
                   </TableCell>
@@ -370,97 +339,12 @@ export default function Inventory() {
                   </TableCell>
 
                   <TableCell className="max-w-52">
-                    {editing ? (
-                      <input
-                        type="text"
-                        className="border px-2 py-1 w-full"
-                        value={order.orderName}
-                        onChange={(e) => {
-                          const updatedOrders = orders.map((o) =>
-                            o._id === order._id
-                              ? { ...o, orderName: e.target.value }
-                              : o
-                          );
-                          setOrders(updatedOrders);
-                        }}
-                      />
-                    ) : (
-                      <p className="text-sm text-gray-500">{order.orderName}</p>
-                    )}
-                  </TableCell>
-
-                  <TableCell>
-                    {editing ? (
-                      <input
-                        type="text"
-                        className="border px-2 py-1 w-full"
-                        value={order.totalPrice}
-                        onChange={(e) => {
-                          const updatedOrders = orders.map((o) =>
-                            o._id === order._id
-                              ? { ...o, totalPrice: e.target.value }
-                              : o
-                          );
-                          setOrders(updatedOrders);
-                        }}
-                      />
-                    ) : (
-                      <p className="text-sm">{order.totalPrice} R.S</p>
-                    )}
-                  </TableCell>
-
-                  <TableCell className="text-nowrap">
-                    {editing ? (
-                      <input
-                        type="text"
-                        className="border px-2 py-1 w-full"
-                        value={order.amountPaid}
-                        onChange={(e) => {
-                          const updatedOrders = orders.map((o) =>
-                            o._id === order._id
-                              ? { ...o, amountPaid: e.target.value }
-                              : o
-                          );
-                          setOrders(updatedOrders);
-                        }}
-                      />
-                    ) : (
-                      <p
-                        className={` ${order.amountPaid == 0
-                          ? "text-black"
-                          : "text-green-600 font-semibold"
-                          }`}
-                      >
-                        {order.amountPaid} R.S
-                      </p>
-                    )}
+                    <p className="text-sm text-gray-500">{order.orderName}</p>
                   </TableCell>
 
                   <TableCell className="text-nowrap">
                     {" "}
                     {order.totalPrice - order.amountPaid} R.S
-                  </TableCell>
-
-                  <TableCell className="text-nowrap">
-                    {/* {editing ? (
-                      <input
-                        type="text"
-                        className="border px-2 py-1 w-full"
-                        value={order.quantity}
-                        onChange={(e) => {
-                          const updatedOrders = orders.map((o) =>
-                            o._id === order._id
-                              ? { ...o, quantity: e.target.value }
-                              : o
-                          );
-                          setOrders(updatedOrders);
-                        }}
-                      />
-                    ) : ( */}
-                    <p onClick={() => console.log(order, "order")} >
-                      {order.quantity} {order.unit}
-                    </p>
-                    {/* )} */}
                   </TableCell>
 
                   <TableCell>
@@ -480,46 +364,8 @@ export default function Inventory() {
                     </span>
                   </TableCell>
 
-
-
                   <TableCell className="text-nowrap">
-                    {editing ? (
-                      <input
-                        type="date"
-                        className="border px-2 py-1 w-full"
-                        value={order.issueDate}
-                        onChange={(e) => {
-                          const updatedOrders = orders.map((o) =>
-                            o._id === order._id
-                              ? { ...o, issueDate: e.target.value }
-                              : o
-                          );
-                          setOrders(updatedOrders);
-                        }}
-                      />
-                    ) : (
-                      <p className="text-sm">{order.issueDate}</p>
-                    )}
-                  </TableCell>
-
-                  <TableCell className="text-nowrap">
-                    {editing ? (
-                      <input
-                        type="date"
-                        className="border px-2 py-1 w-full"
-                        value={order.deadline}
-                        onChange={(e) => {
-                          const updatedOrders = orders.map((o) =>
-                            o._id === order._id
-                              ? { ...o, deadline: e.target.value }
-                              : o
-                          );
-                          setOrders(updatedOrders);
-                        }}
-                      />
-                    ) : (
-                      <p className="text-sm">{order.deadline}</p>
-                    )}
+                    <p className="text-sm">{order.deadline}</p>
                   </TableCell>
 
                   <TableCell className="text-nowrap">
@@ -531,10 +377,11 @@ export default function Inventory() {
                           onClick={(e) => DeleteOrder(e, order._id)}
                           className="text-red-600 hover:cursor-pointer"
                         />
+
+                        <Eye onClick={()=> ModalAction(order)} className="text-blue-600 hover:cursor-pointer" />
                         <Invoice order={order} />
 
                       </div>
-
                     )}
                   </TableCell>
                 </TableRow>
@@ -542,13 +389,7 @@ export default function Inventory() {
           </TableBody>
         </Table>
       )}
-
-      <Action
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        fetchOrders={fetchOrders}
-      />
-
+      <Detail isOpen={isOpen} selectedOrder={selectedOrder} onOpenChange={onOpenChange}  />
     </section>
   );
 }
