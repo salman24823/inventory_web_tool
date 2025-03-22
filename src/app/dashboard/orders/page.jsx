@@ -269,7 +269,7 @@ export default function Inventory() {
           </div>
 
           <div className="flex gap-3">
-            {editing == false ? (
+            {/* {editing == false ? (
               <Button onPress={() => setEditing(true)} className="bg-green-500">
                 <Pencil className="text-white w-5" />
               </Button>
@@ -277,7 +277,7 @@ export default function Inventory() {
               <Button onPress={handleConfirm} className="bg-green-500">
                 <Check className="text-white" />
               </Button>
-            )}
+            )} */}
 
             <Action
               fetchOrders={fetchOrders}
