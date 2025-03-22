@@ -51,8 +51,8 @@ const Invoice = ({ order }) => {
             <tr>
               <td className="font-bold py-1">Customer Name:</td>
               <td className="py-1">{order.name}</td>
-              <td className="font-bold py-1">Deadline:</td>
-              <td className="py-1">{order.deadline}</td>
+              {/* <td className="font-bold py-1">Deadline:</td> */}
+              {/* <td className="py-1">{order.deadline}</td> */}
             </tr>
             <tr>
               <td className="font-bold py-1">Phone:</td>
@@ -94,6 +94,18 @@ const Invoice = ({ order }) => {
           <p>Thank you for your business!</p>
           <p>Please make payments payable to: Your Company Name</p>
         </div>
+
+        <div className="mt-60 flex justify-between items-center gap-10">
+          <div className="text-center">
+            <p className="border-t border-gray-700 w-48 mx-auto"></p>
+            <p className="mt-2 text-gray-800">Reference Name</p>
+          </div>
+          <div className="text-center">
+            <p className="border-t border-gray-700 w-48 mx-auto"></p>
+            <p className="mt-2 text-gray-800">Admin</p>
+          </div>
+        </div>
+
       </div>
     </div>
   );

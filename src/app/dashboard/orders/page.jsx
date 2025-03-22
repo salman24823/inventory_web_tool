@@ -21,7 +21,6 @@ import { Spinner } from "@heroui/react";
 import { toast } from "react-toastify";
 import { Pencil } from "lucide-react";
 import { Check } from "lucide-react";
-import Invoice from "./Invoice";
 import { Eye } from "lucide-react";
 import Detail from "./detail";
 
@@ -183,7 +182,6 @@ export default function Inventory() {
 
   return (
     <section className="w-full flex flex-col gap-4">
-      <Button onPress={() => console.log(orders, "orders")}>clg</Button>
       <div className="shadow-small payment-filter flex flex-col gap-3 w-full p-4 bg-white">
         <h2 className="text-medium text-gray-700 font-normal">
           Select Filter:
@@ -379,7 +377,7 @@ export default function Inventory() {
                         />
 
                         <Eye onClick={()=> ModalAction(order)} className="text-blue-600 hover:cursor-pointer" />
-                        <Invoice order={order} />
+
 
                       </div>
                     )}
