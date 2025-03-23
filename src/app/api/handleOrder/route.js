@@ -90,6 +90,7 @@ export async function POST(req) {
       deadline,
       orderImage,
       quality,
+      stockId,
       installments: [{ amount: amountPaidNum, transactionType }], // Store first installment
     });
 
