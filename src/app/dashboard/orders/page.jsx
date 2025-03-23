@@ -117,20 +117,21 @@ export default function Inventory() {
     return matchesFilter && matchesMonth && matchesYear;
   });
 
-  async function DeleteOrder(e, id) {
+  async function DeleteOrder(e, order) {
     e.preventDefault(); // Prevent default event behavior
-    setLoading(id); // Set loading state for this specific order
-
+    setLoading(order); // Set loading state for this specific order
+    
     if (!window.confirm("Are you sure you want to delete this order?")) {
       setLoading(false);
       return;
     }
 
+
     try {
       const response = await fetch("/api/handleOrder", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ order }),
       });
 
       if (!response.ok) {
@@ -149,6 +150,7 @@ export default function Inventory() {
     }
   }
 
+  // edit
   async function handleConfirm() {
     try {
       const response = await fetch("/api/handleOrder", {
@@ -372,7 +374,7 @@ export default function Inventory() {
                     ) : (
                       <div className="flex gap-3 items-center">
                         <X
-                          onClick={(e) => DeleteOrder(e, order._id)}
+                          onClick={(e) => DeleteOrder(e, order)}
                           className="text-red-600 hover:cursor-pointer"
                         />
 

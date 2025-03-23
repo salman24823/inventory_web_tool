@@ -44,7 +44,10 @@ const Invoice = ({ order }) => {
           <tbody>
             <tr>
               <td className="font-bold py-1">Invoice Number:</td>
-              <td className="py-1">{order.invoiceNumber}</td>
+              <td className="py-1">
+                {/* {order.invoiceNumber} */}
+                267
+                </td>
               <td className="font-bold py-1">Issue Date:</td>
               <td className="py-1">{order.issueDate}</td>
             </tr>

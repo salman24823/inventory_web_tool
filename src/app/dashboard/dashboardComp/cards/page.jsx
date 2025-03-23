@@ -14,31 +14,51 @@ const Cards = () => {
   const [totalPending, setTotalPending] = useState(null);
   const [totalOrders, setTotalOrders] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  const walletAmount = 2937 ;
-  const bankAmount = 23000 ;
-  const cashAmount = 3000 ;
+  const [cashAmount, setcashAmount] = useState(0);
+  const [bankAmount, setbankAmount] = useState(0);
+  const [walletAmount, setwalletAmount] = useState(0);
 
   async function HandleOrders() {
     try {
-      const response = await fetch("/api/handleOrder");
-      const result = await response.json();
+        const response = await fetch("/api/handleOrder");
+        const result = await response.json();
 
-      const uniqueUsers = new Set(result.map(item => item.phone)).size;
-      const revenue = result.reduce((sum, item) => sum + Number(item.totalPrice), 0);
-      const pendingAmount = result.reduce((sum, item) => sum + (Number(item.totalPrice) - Number(item.amountPaid)), 0);
-      const ordersCount = result.length;
+        console.log(result, "result order");
 
-      setTotalUsers(uniqueUsers);
-      setTotalRevenue(revenue);
-      setTotalPending(pendingAmount);
-      setTotalOrders(ordersCount);
+        const uniqueUsers = new Set(result.map(item => item.phone)).size;
+        const revenue = result.reduce((sum, item) => sum + Number(item.totalPrice), 0);
+        const pendingAmount = result.reduce((sum, item) => sum + (Number(item.totalPrice) - Number(item.amountPaid)), 0);
+        const ordersCount = result.length;
+
+        // Calculate amounts by transaction type
+        let cashTotal = 0, bankTotal = 0, walletTotal = 0;
+        
+        result.forEach(order => {
+            order.installments.forEach(installment => {
+                if (installment.transactionType === "Cash") {
+                    cashTotal += installment.amount;
+                } else if (installment.transactionType === "Bank") {
+                    bankTotal += installment.amount;
+                } else if (installment.transactionType === "Wallet") {
+                    walletTotal += installment.amount;
+                }
+            });
+        });
+
+        setTotalUsers(uniqueUsers);
+        setTotalRevenue(revenue);
+        setTotalPending(pendingAmount);
+        setTotalOrders(ordersCount);
+        setcashAmount(cashTotal);
+        setbankAmount(bankTotal);
+        setwalletAmount(walletTotal);
     } catch (error) {
-      console.log(error, "error fromGET");
+        console.log(error, "error from GET");
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  }
+}
+
 
   useEffect(() => {
     HandleOrders();

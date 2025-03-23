@@ -114,17 +114,24 @@ export async function POST(req) {
 export async function DELETE(req) {
   await dbConnection(); // Ensure DB connection
   try {
-    const { id } = await req.json(); // Parse request body
+    const { order } = await req.json(); // Parse request body
 
-    if (!id) {
+    if (!order || !order._id || !order.stockId || !order.quantity) {
       return NextResponse.json(
-        { success: false, message: "Order ID is required" },
+        { success: false, message: "Order ID, stock ID, and quantity are required" },
         { status: 400 }
       );
     }
-    console.log(id, "Order ID DELTE");
-    const deletedOrder = await orderModel.findByIdAndDelete(id); // Delete order by ID
-    console.log(deletedOrder, "Order ID DELTE");
+
+    console.log(order, "Order ID DELETE");
+
+    // Increment stock quantity when deleting an order
+    await stockModel.findByIdAndUpdate(order.stockId, {
+      $inc: { quantity: Number(order.quantity) }, // Increment stock
+    });
+
+    // Delete the order
+    const deletedOrder = await orderModel.findByIdAndDelete(order._id);
 
     if (!deletedOrder) {
       return NextResponse.json(
@@ -133,9 +140,11 @@ export async function DELETE(req) {
       );
     }
 
+    console.log(deletedOrder, "Order Deleted");
+
     return NextResponse.json({
       success: true,
-      message: "Order deleted successfully",
+      message: "Order deleted successfully, stock updated",
     });
   } catch (error) {
     console.error("Error deleting order:", error);
@@ -146,10 +155,11 @@ export async function DELETE(req) {
   }
 }
 
+
 export async function PUT(req) {
   await dbConnection(); // Ensure DB connection
   try {
-    const { orders } = await req.json(); // Parse request body
+    const { updatedOrder } = await req.json(); // Parse request body
 
     if (!orders) {
       return NextResponse.json(
@@ -160,14 +170,14 @@ export async function PUT(req) {
 
     console.log(orders, "Order ID PUT");
 
-    const updatedOrders = await Promise.all(
-      orders.map(async (order) => {
-        const { _id, ...updateData } = order;
-        return await orderModel.findByIdAndUpdate(_id, updateData, {
-          new: true,
-        });
-      })
-    );
+    // const updatedOrders = await Promise.all(
+    //   orders.map(async (order) => {
+    //     const { _id, ...updateData } = order;
+    //     return await orderModel.findByIdAndUpdate(_id, updateData, {
+    //       new: true,
+    //     });
+    //   })
+    // );
 
     return NextResponse.json({
       success: true,
