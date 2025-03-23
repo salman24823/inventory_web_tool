@@ -10,6 +10,7 @@ import {
     Input,
     Tabs,
     Tab,
+    Select, SelectItem,
     Textarea,
 } from "@heroui/react";
 import { useEffect, useState } from "react";
@@ -78,6 +79,29 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder }) {
             alert("Please fill all fields for the installment.");
         }
     }
+
+    const [status, setStatus] = useState("completed"); // Default status
+    const [bgColor, setBgColor] = useState("bg-green-100"); // Default background color
+
+    const handleStatusChange = (e) => {
+        const selectedValue = e.target.value;
+        setStatus(selectedValue);
+
+        // Update background color based on the selected value
+        switch (selectedValue) {
+            case "completed":
+                setBgColor("bg-green-200"); // Light green for completed
+                break;
+            case "pending":
+                setBgColor("bg-yellow-200"); // Light yellow for pending
+                break;
+            case "cancel":
+                setBgColor("bg-white"); // Light red for cancel
+                break;
+            default:
+                setBgColor("bg-white"); // Default white
+        }
+    };
 
     return (
         <>
@@ -161,6 +185,20 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder }) {
                                                         ) : (
                                                             <p className="text-blue-600 font-semibold mt-1">{totalPrice}</p>
                                                         )}
+                                                    </div>
+                                                    <div className="flex justify-between items-center border-b border-gray-200">
+                                                        <h2 className="text-sm font-semibold text-gray-600">Order Status</h2>
+
+                                                        <select
+                                                            value={status}
+                                                            onChange={handleStatusChange}
+                                                            className={`block w-32 px-4 appearance-none cursor-pointer py-1 font-semibold text-sm mb-2 text-gray-700 ${bgColor} border border-gray-300 rounded-md shadow-sm focus:outline-none transition duration-150 ease-in-out`}
+                                                        >
+                                                            <option className="!bg-white" value="completed">Completed</option>
+                                                            <option className="!bg-white" value="pending">Pending</option>
+                                                            <option className="!bg-white" value="cancel">Canceled</option>
+                                                        </select>
+
                                                     </div>
                                                 </div>
 

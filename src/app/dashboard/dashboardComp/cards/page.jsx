@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { Users, Package, Activity } from "lucide-react";
 import { HandCoins } from "lucide-react";
 import { Button, Spinner } from "@heroui/react";
+import { Coins } from "lucide-react";
+import { BanknoteIcon } from "lucide-react";
+import { Wallet } from "lucide-react";
 
 const Cards = () => {
   const [totalUsers, setTotalUsers] = useState(null);
@@ -11,6 +14,10 @@ const Cards = () => {
   const [totalPending, setTotalPending] = useState(null);
   const [totalOrders, setTotalOrders] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const walletAmount = 2937 ;
+  const bankAmount = 23000 ;
+  const cashAmount = 3000 ;
 
   async function HandleOrders() {
     try {
@@ -65,6 +72,34 @@ const Cards = () => {
       icon: <Activity className="text-green-500 w-6 h-6" />,
       bgColor: "bg-green-100",
       hoverBgColor: "hover:bg-green-200",
+    },
+    // {
+    //   title: "Net Profit",
+    //   value: loading ? <Spinner size="sm" /> : `PKR ${totalRevenue ?? 0}`,
+    //   icon: <Activity className="text-green-500 w-6 h-6" />,
+    //   bgColor: "bg-blue-100",
+    //   hoverBgColor: "hover:bg-blue-200",
+    // },
+    {
+      title: "Wallet Amount",
+      value: loading ? <Spinner size="sm" /> : `PKR ${walletAmount ?? 400}`,
+      icon: <Wallet className="text-green-500 w-6 h-6" />,
+      bgColor: "bg-blue-100",
+      hoverBgColor: "hover:bg-blue-200",
+    },
+    {
+      title: "Bank Amount",
+      value: loading ? <Spinner size="sm" /> : `PKR ${bankAmount ?? 3000}`,
+      icon: <BanknoteIcon className="text-green-500 w-6 h-6" />,
+      bgColor: "bg-blue-100",
+      hoverBgColor: "hover:bg-blue-200",
+    },
+    {
+      title: "Cash Amount",
+      value: loading ? <Spinner size="sm" /> : `PKR ${cashAmount ?? 5540}`,
+      icon: <Coins className="text-green-500 w-6 h-6" />,
+      bgColor: "bg-blue-100",
+      hoverBgColor: "hover:bg-blue-200",
     },
   ];
 
