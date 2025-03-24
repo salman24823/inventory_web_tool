@@ -23,10 +23,14 @@ export async function POST(req) {
   await dbConnection();
 
   try {
-    const {data , user } = await req.json();
+    const data = await req.json();
+
+    console.log(data,"data")
+
     const {
       name,
       phone,
+      user,
       stockName,
       quantity,
       totalPrice,

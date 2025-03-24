@@ -124,8 +124,8 @@ export default function Action({ fetchOrders }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
           user : USER,
+          name,
           phone,
           stockName: selectedStock.stockName, // Use selectedStock.stockName
           quantity,
@@ -134,7 +134,6 @@ export default function Action({ fetchOrders }) {
           issueDate,
           deadline,
           stockId,
-
           quality,
           transactionType,
         }),
