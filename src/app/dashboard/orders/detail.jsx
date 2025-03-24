@@ -9,13 +9,15 @@ import {
     Button,
     Input,
     Tabs,
-    Tab
+    Tab,
+    RadioGroup, Radio
+
 } from "@heroui/react";
 import { useEffect, useState } from "react";
 import Invoice from "./Invoice";
 import { toast } from "react-toastify";
 
-export default function Detail({ isOpen, onOpenChange, selectedOrder , fetchOrders }) {
+export default function Detail({ isOpen, onOpenChange, selectedOrder, fetchOrders }) {
     const [editing, setEditing] = useState(false);
     const [orderName, setOrderName] = useState(selectedOrder?.orderName || "");
     const [phone, setPhone] = useState(selectedOrder?.phone || "");
@@ -30,6 +32,7 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder , fetchOrde
     const [newInstallment, setNewInstallment] = useState({ amount: "", transactionType: "Cash", date: "" });
 
     const [newQTY, setNewQTY] = useState(quantity);
+    const [loading, setLoading] = useState(false);
 
     // Calculate pending amount
     const pendingAmount = Number(totalPrice) - Number(amountPaid);
@@ -51,8 +54,6 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder , fetchOrde
 
     // Function to handle confirmation and update the order
     async function handleConfirm() {
-
-        alert(`new QTY ${newQTY} , pre ${quantity}`)
 
         const updatedOrder = {
             ...selectedOrder,
@@ -94,39 +95,42 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder , fetchOrde
     }
 
     // Function to add a new installment
-    function addInstallment() {
+    async function addInstallment() {
+
+        setLoading(true)
+
         if (newInstallment.amount && newInstallment.date) {
             const updatedInstallments = [...installments, newInstallment];
-            setInstallments(updatedInstallments);
-            setAmountPaid((prev) => Number(prev) + Number(newInstallment.amount)); // Update amount paid
-            setNewInstallment({ amount: "", transactionType: "Cash", date: "" }); // Reset form
+
+            try {
+
+                const response = await fetch("/api/handleInstallments", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ updatedInstallments, selectedOrder }),
+                });
+
+                setInstallments(updatedInstallments);
+                setAmountPaid((prev) => Number(prev) + Number(newInstallment.amount)); // Update amount paid
+                setNewInstallment({ amount: "", transactionType: "Cash", date: "" }); // Reset form
+                setLoading(false)
+
+
+            } catch (error) {
+
+                console.log(error)
+                setLoading(false)
+
+
+            }
+
         } else {
-            alert("Please fill all fields for the installment.");
+
+            toast.error("Please fill all fields for the installment.");
+            setLoading(false)
+
         }
     }
-
-    // const [status, setStatus] = useState("completed"); 
-    // const [bgColor, setBgColor] = useState("bg-green-100"); 
-
-    // const handleStatusChange = (e) => {
-    //     const selectedValue = e.target.value;
-    //     setStatus(selectedValue);
-
-    //     // Update background color based on the selected value
-    //     switch (selectedValue) {
-    //         case "completed":
-    //             setBgColor("bg-green-200"); // Light green for completed
-    //             break;
-    //         case "pending":
-    //             setBgColor("bg-yellow-200"); // Light yellow for pending
-    //             break;
-    //         case "cancel":
-    //             setBgColor("bg-white"); // Light red for cancel
-    //             break;
-    //         default:
-    //             setBgColor("bg-white"); // Default white
-    //     }
-    // };
 
     return (
         <>
@@ -318,10 +322,10 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder , fetchOrde
                                                 {/* Installments History */}
                                                 <div>
                                                     <h2 className="text-lg font-semibold text-gray-800 border-b border-gray-200 pb-3">Installments History</h2>
-                                                    <div className="mt-6 flex gap-3">
+                                                    <div className="mt-6 grid max-md:grid-cols-2 grid-cols-4 gap-3">
                                                         {installments.length > 0 ? (
                                                             installments.map((installment, index) => (
-                                                                <div key={index} className="py-3 w-fit border border-gray-300 hover:bg-gray-50 transition-colors duration-200 rounded-lg px-4">
+                                                                <div key={index} className="py-3 border border-gray-300 hover:bg-gray-50 transition-colors duration-200 rounded-lg px-4">
                                                                     <p className="text-sm text-gray-700"><strong>Amount:</strong> {installment.amount}</p>
                                                                     <p className="text-sm text-gray-700"><strong>Transaction Type:</strong> {installment.transactionType}</p>
                                                                     <p className="text-sm text-gray-700"><strong>Date:</strong> {installment.date}</p>
@@ -352,7 +356,20 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder , fetchOrde
                                                             onChange={(e) => setNewInstallment({ ...newInstallment, date: e.target.value })}
                                                             className="border-gray-300 focus:border-gray-500 focus:ring-1 focus:ring-gray-500 transition-colors duration-200 rounded-md"
                                                         />
+                                                        <div>
+                                                            <RadioGroup
+                                                                orientation="horizontal"
+                                                                value={newInstallment.transactionType}
+                                                                onValueChange={(value) => setNewInstallment({ ...newInstallment, transactionType: value })}
+                                                                label="Transaction Type"
+                                                            >
+                                                                <Radio value="Cash">Cash</Radio>
+                                                                <Radio value="Bank">Bank</Radio>
+                                                                <Radio value="Wallet">Wallet</Radio>
+                                                            </RadioGroup>
+                                                        </div>
                                                         <Button
+                                                            isLoading={loading}
                                                             size="md"
                                                             onPress={addInstallment}
                                                             className="col-span-full bg-gray-800 text-white hover:bg-gray-900 transition-colors duration-200 rounded-md py-2"
