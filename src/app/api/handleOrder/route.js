@@ -4,6 +4,8 @@ import orderModel from "@/Models/orderModel";
 import stockModel from "@/Models/stockModel";
 import canceledOrderModel from "@/Models/canceledOrderModel";
 
+export const revalidate = 0;
+
 export async function GET() {
   await dbConnection();
   try {

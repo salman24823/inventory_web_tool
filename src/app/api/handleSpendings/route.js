@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import dbConnect from "@/config/dbConnection"
 import Spending from "@/Models/spendingsModel";
 
+export const revalidate = 0;
+
+
 export async function GET() {
   try {
     await dbConnect();

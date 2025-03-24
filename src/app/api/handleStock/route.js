@@ -1,7 +1,11 @@
 // app/api/handleStock/route.js
 import { NextResponse } from "next/server";
 import dbConnection from "@/config/dbConnection";
+
 import stockModel from "@/Models/stockModel";
+
+export const revalidate = 0;
+
 
 // GET: Fetch all stocks
 export async function GET() {

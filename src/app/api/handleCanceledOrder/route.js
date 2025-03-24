@@ -2,6 +2,8 @@ import dbConnection from "@/config/dbConnection";
 import canceledOrderModel from "@/Models/canceledOrderModel";
 import { NextResponse } from "next/server";
 
+export const revalidate = 0;
+
 export async function GET() {
   await dbConnection();
   try {
