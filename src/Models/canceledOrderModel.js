@@ -18,6 +18,7 @@ const InstallmentSchema = new mongoose.Schema(
 
 const OrderSchema = new mongoose.Schema(
   {
+    user : { type: String },
     name: { type: String },
     stockId: { type: mongoose.Schema.Types.ObjectId },
     phone: { type: String },
@@ -27,7 +28,7 @@ const OrderSchema = new mongoose.Schema(
     totalPrice: { type: String },
     amountPaid: { type: String },
     orderStatus: { type: String },
-    isCancelled: { type: Boolean, default: false },
+    isCancelled: { type: Boolean, default: true },
     issueDate: { type: String },
     deadline: { type: String },
     orderImage: {
@@ -45,5 +46,4 @@ const OrderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.orderModel ||
-  mongoose.model("orderModel", OrderSchema);
+export default mongoose.models.canceledOrderModel || mongoose.model("canceledOrderModel", OrderSchema);

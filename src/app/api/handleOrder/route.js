@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import dbConnection from "@/config/dbConnection";
 import orderModel from "@/Models/orderModel";
 import stockModel from "@/Models/stockModel";
+import canceledOrderModel from "@/Models/canceledOrderModel";
 
 export async function GET() {
   await dbConnection();
@@ -18,7 +19,7 @@ export async function GET() {
 
 export async function POST(req) {
   await dbConnection();
-  
+
   try {
     const data = await req.json();
     const {
@@ -44,9 +45,16 @@ export async function POST(req) {
 
     // Validate required fields
     if (
-      !name || !phone || !stockName || !quantityNum || 
-      !totalPrice || !amountPaidNum || !issueDate || 
-      !deadline || !stockId || !transactionType
+      !name ||
+      !phone ||
+      !stockName ||
+      !quantityNum ||
+      !totalPrice ||
+      !amountPaidNum ||
+      !issueDate ||
+      !deadline ||
+      !stockId ||
+      !transactionType
     ) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -95,7 +103,9 @@ export async function POST(req) {
     });
 
     // Update stock only if order creation succeeds
-    await stockModel.findByIdAndUpdate(stockId, { $inc: { quantity: -quantityNum } });
+    await stockModel.findByIdAndUpdate(stockId, {
+      $inc: { quantity: -quantityNum },
+    });
 
     console.log(newOrder, "New Order Created");
 
@@ -115,16 +125,54 @@ export async function POST(req) {
 export async function DELETE(req) {
   await dbConnection(); // Ensure DB connection
   try {
-    const { order } = await req.json(); // Parse request body
+    const { order, USER } = await req.json(); // Parse request body
 
-    if (!order || !order._id || !order.stockId || !order.quantity) {
+    if (!order || !order._id || !order.stockId || !order.quantity || !USER) {
       return NextResponse.json(
-        { success: false, message: "Order ID, stock ID, and quantity are required" },
+        {
+          success: false,
+          message: "Order ID, stock ID, and quantity are required",
+        },
         { status: 400 }
       );
     }
 
-    console.log(order, "Order ID DELETE");
+    const {
+      _id,
+      name,
+      stockId,
+      phone,
+      orderName,
+      quantity,
+      quality,
+      totalPrice,
+      amountPaid,
+      issueDate,
+      deadline,
+      orderImage,
+      userImage,
+      installments,
+    } = order;
+
+    const canceledOrder = await canceledOrderModel.create({
+      // _id, // Explicitly set _id if required
+      name,
+      stockId,
+      phone,
+      user: USER,
+      orderName,
+      quantity,
+      quality,
+      totalPrice,
+      amountPaid,
+      issueDate,
+      deadline,
+      orderImage,
+      userImage,
+      installments,
+    });
+
+    // await canceledOrder.create();
 
     // Increment stock quantity when deleting an order
     await stockModel.findByIdAndUpdate(order.stockId, {
@@ -156,37 +204,80 @@ export async function DELETE(req) {
   }
 }
 
-
 export async function PUT(req) {
   await dbConnection(); // Ensure DB connection
-  try {
-    const { updatedOrder } = await req.json(); // Parse request body
 
-    if (!orders) {
+  try {
+    const body = await req.json(); // Parse request body
+
+    if (!body || !body.updatedOrder) {
       return NextResponse.json(
-        { success: false, message: "Orders must be an array" },
+        { success: false, message: "Invalid order data" },
         { status: 400 }
       );
     }
 
-    console.log(orders, "Order ID PUT");
+    const updatedOrder = body.updatedOrder; // Extract the correct object
 
-    // const updatedOrders = await Promise.all(
-    //   orders.map(async (order) => {
-    //     const { _id, ...updateData } = order;
-    //     return await orderModel.findByIdAndUpdate(_id, updateData, {
-    //       new: true,
-    //     });
-    //   })
-    // );
+    console.log(updatedOrder, "Order to PUT");
+
+    // Now, correctly access properties
+    const orderId = updatedOrder._id;
+    const stockId = updatedOrder.stockId;
+    const prevQuantity = Number(updatedOrder.quantity); // Convert to number
+    const newQuantity = Number(updatedOrder.newQTY); // Convert to number
+    const otherUpdates = { ...updatedOrder }; // Copy all data
+
+    console.log(orderId, stockId, prevQuantity, newQuantity, "Here is Line");
+    console.log("Here is Line bottom");
+
+    // Determine quantity change type
+    let label = "no change";
+    if (newQuantity > prevQuantity) {
+      label = "increment";
+    } else if (newQuantity < prevQuantity) {
+      label = "decrement";
+    }
+
+    // Update orderModel with all new data
+    await orderModel.findByIdAndUpdate(
+      orderId,
+      { ...otherUpdates, quantity: newQuantity, updatedAt: new Date() },
+      { new: true }
+    );
+
+    // If quantity changed, update stockModel
+    if (stockId) {
+      if (label === "increment") {
+        const stockUpdate = -Math.abs(newQuantity - prevQuantity);
+        console.log(
+          `🔼 Increment: Decreasing stock by ${Math.abs(stockUpdate)}`
+        );
+        await stockModel.findByIdAndUpdate(
+          stockId,
+          { $inc: { quantity: stockUpdate } },
+          { new: true }
+        );
+      } else if (label === "decrement") {
+        const stockUpdate = Math.abs(newQuantity - prevQuantity);
+        console.log(`🔽 Decrement: Increasing stock by ${stockUpdate}`);
+        await stockModel.findByIdAndUpdate(
+          stockId,
+          { $inc: { quantity: stockUpdate } },
+          { new: true }
+        );
+      } else {
+        console.log("⚠️ No change in stock quantity");
+      }
+    }
 
     return NextResponse.json({
       success: true,
-      message: "Orders updated successfully",
-      updatedOrders,
+      message: `Order updated successfully. Stock ${label}`,
+      label,
     });
   } catch (error) {
-    console.error("Error updating orders:", error);
+    console.error("Error updating order & stock:", error);
     return NextResponse.json(
       { success: false, message: "Server error" },
       { status: 500 }

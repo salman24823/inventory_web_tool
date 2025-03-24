@@ -14,6 +14,7 @@ import {
   DropdownItem,
   useDisclosure,
   Button,
+  Tabs, Tab
 } from "@heroui/react";
 import { ChevronDown, X } from "lucide-react";
 import Action from "./action";
@@ -23,6 +24,7 @@ import { Pencil } from "lucide-react";
 import { Check } from "lucide-react";
 import { Eye } from "lucide-react";
 import Detail from "./detail";
+import { useSession } from "next-auth/react";
 
 export default function Inventory() {
   const [selectedFilter, setSelectedFilter] = useState("All");
@@ -37,6 +39,14 @@ export default function Inventory() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const [isLoading, setIsLoading] = React.useState(true);
+
+  const [selected, setSelected] = React.useState("Default");
+
+  const [ canceledOrder , setCanceledOrder ] = useState([])
+
+    const { data: session } = useSession();
+  
+  const USER = session?.user?.name || null
 
   const fetchOrders = async () => {
     setIsLoading(true);
@@ -55,7 +65,8 @@ export default function Inventory() {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+    getCanceledOrder()
+  }, [session]);
 
   const months = [
     "January",
@@ -118,20 +129,20 @@ export default function Inventory() {
   });
 
   async function DeleteOrder(e, order) {
+
     e.preventDefault(); // Prevent default event behavior
     setLoading(order); // Set loading state for this specific order
-    
+
     if (!window.confirm("Are you sure you want to delete this order?")) {
       setLoading(false);
       return;
     }
 
-
     try {
       const response = await fetch("/api/handleOrder", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ order }),
+        body: JSON.stringify({ order , USER }),
       });
 
       if (!response.ok) {
@@ -176,10 +187,21 @@ export default function Inventory() {
     }
   }
 
-  function ModalAction(order){
-    console.log(order,"selected order")
+  function ModalAction(order) {
+    console.log(order, "selected order")
     setSelectedOrder(order);
     onOpen()
+  }
+
+  async function getCanceledOrder(){
+    try {
+      const response = await fetch("/api/handleCanceledOrder");
+      if (!response.ok) throw new Error("Failed to fetch");
+      const data = await response.json();
+      setCanceledOrder(data);
+    } catch (error) {
+      console.error("Error fetching canceled orders:", error);
+    }
   }
 
   return (
@@ -271,125 +293,232 @@ export default function Inventory() {
           </div>
 
           <div className="flex gap-3">
-            {/* {editing == false ? (
-              <Button onPress={() => setEditing(true)} className="bg-green-500">
-                <Pencil className="text-white w-5" />
-              </Button>
-            ) : (
-              <Button onPress={handleConfirm} className="bg-green-500">
-                <Check className="text-white" />
-              </Button>
-            )} */}
+
+            <Tabs color="white" aria-label="Options" selectedKey={selected} onSelectionChange={setSelected}>
+              <Tab key="Default" title="Default" />
+              <Tab key="Canceled" title="Canceled" />
+            </Tabs>
 
             <Action
               fetchOrders={fetchOrders}
             />
-
           </div>
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50">
-          <Spinner className="w-10 h-10 animate-spin text-gray-500" />
-        </div>
-      ) : (
-        <Table
-          className="overflow-x-scroll text-nowrap custom-scrollbar"
-          aria-label="Order analysis table"
-          loading={isLoading}
-        >
-          <TableHeader>
-            <TableColumn>#</TableColumn>
-            <TableColumn>PARTY</TableColumn>
-            <TableColumn>ORDER</TableColumn>
-            <TableColumn>TITLE</TableColumn>
-            <TableColumn>PENDING</TableColumn>
-            <TableColumn>STATUS</TableColumn>
-            <TableColumn>DUE DATE</TableColumn>
-            <TableColumn>ACTION</TableColumn>
-          </TableHeader>
 
-          <TableBody emptyContent="No Orders Found">
-            {filteredOrders
-              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-              .map((order, index) => (
-                <TableRow className="hover:bg-gray-100" key={order._id}>
-                  <TableCell>{index + 1}</TableCell>
+      {
+        selected == "Default" ?
 
-                  <TableCell className="max-w-52">
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <p className="font-semibold">{order.name}</p>
-                        <p className="text-sm text-gray-500">{order.phone}</p>
-                      </div>
-                    </div>
-                  </TableCell>
+          <>
+            {isLoading ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50">
+                <Spinner className="w-10 h-10 animate-spin text-gray-500" />
+              </div>
+            ) : (
+              <Table
+                className="overflow-x-scroll  text-nowrap custom-scrollbar"
+                aria-label="Order analysis table"
+                loading={isLoading}
+              >
 
-                  <TableCell>
-                    {order.orderImage ? (
-                      <img
-                        src={order.orderImage}
-                        className="w-10 h-10"
-                        alt="Order"
-                      />
-                    ) : (
-                      "No Image"
-                    )}
-                  </TableCell>
+                <TableHeader>
+                  <TableColumn>#</TableColumn>
+                  <TableColumn>PARTY</TableColumn>
+                  <TableColumn>ORDER</TableColumn>
+                  <TableColumn>TITLE</TableColumn>
+                  <TableColumn>PENDING</TableColumn>
+                  <TableColumn>STATUS</TableColumn>
+                  <TableColumn>DUE DATE</TableColumn>
+                  <TableColumn>ACTION</TableColumn>
+                </TableHeader>
 
-                  <TableCell className="max-w-52">
-                    <p className="text-sm text-gray-500">{order.orderName}</p>
-                  </TableCell>
+                <TableBody emptyContent="No Orders Found">
+                  {filteredOrders
+                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                    .map((order, index) => (
+                      <TableRow className="hover:bg-gray-100" key={order._id}>
+                        <TableCell>{index + 1}</TableCell>
 
-                  <TableCell className="text-nowrap">
-                    {" "}
-                    {order.totalPrice - order.amountPaid} R.S
-                  </TableCell>
+                        <TableCell className="max-w-52">
+                          <div className="flex items-center gap-3">
+                            <div>
+                              <p className="font-semibold">{order.name}</p>
+                              <p className="text-sm text-gray-500">{order.phone}</p>
+                            </div>
+                          </div>
+                        </TableCell>
 
-                  <TableCell>
-                    <span
-                      className={`px-4 text-xs py-1 rounded-full  ${order.totalPrice === order.amountPaid
-                        ? "bg-green-100 text-green-700" // Paid
-                        : new Date() > new Date(order.deadline)
-                          ? "bg-red-100 text-red-700" // Overdue
-                          : "bg-yellow-100 text-yellow-700" // Pending
-                        }`}
-                    >
-                      {order.totalPrice === order.amountPaid
-                        ? "Paid"
-                        : new Date() > new Date(order.deadline)
-                          ? "Overdue"
-                          : "Pending"}
-                    </span>
-                  </TableCell>
+                        <TableCell>
+                          {order.orderImage ? (
+                            <img
+                              src={order.orderImage}
+                              className="w-10 h-10"
+                              alt="Order"
+                            />
+                          ) : (
+                            "No Image"
+                          )}
+                        </TableCell>
 
-                  <TableCell className="text-nowrap">
-                    <p className="text-sm">{order.deadline}</p>
-                  </TableCell>
+                        <TableCell className="max-w-52">
+                          <p className="text-sm text-gray-500">{order.orderName}</p>
+                        </TableCell>
 
-                  <TableCell className="text-nowrap">
-                    {loading === order._id ? (
-                      <Spinner size="sm" />
-                    ) : (
-                      <div className="flex gap-3 items-center">
-                        <X
-                          onClick={(e) => DeleteOrder(e, order)}
-                          className="text-red-600 hover:cursor-pointer"
-                        />
+                        <TableCell className="text-nowrap">
+                          {" "}
+                          {order.totalPrice - order.amountPaid} R.S
+                        </TableCell>
 
-                        <Eye onClick={()=> ModalAction(order)} className="text-blue-600 hover:cursor-pointer" />
+                        <TableCell>
+                          <span
+                            className={`px-4 text-xs py-1 rounded-full  ${order.totalPrice === order.amountPaid
+                              ? "bg-green-100 text-green-700" // Paid
+                              : new Date() > new Date(order.deadline)
+                                ? "bg-red-100 text-red-700" // Overdue
+                                : "bg-yellow-100 text-yellow-700" // Pending
+                              }`}
+                          >
+                            {order.totalPrice === order.amountPaid
+                              ? "Paid"
+                              : new Date() > new Date(order.deadline)
+                                ? "Overdue"
+                                : "Pending"}
+                          </span>
+                        </TableCell>
+
+                        <TableCell className="text-nowrap">
+                          <p className="text-sm">{order.deadline}</p>
+                        </TableCell>
+
+                        <TableCell className="text-nowrap">
+                          {loading === order._id ? (
+                            <Spinner size="sm" />
+                          ) : (
+                            <div className="flex gap-3 items-center">
+                              <X
+                                onClick={(e) => DeleteOrder(e, order)}
+                                className="text-red-600 hover:cursor-pointer"
+                              />
+
+                              <Eye onClick={() => ModalAction(order)} className="text-blue-600 hover:cursor-pointer" />
 
 
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      )}
-      <Detail isOpen={isOpen} selectedOrder={selectedOrder} onOpenChange={onOpenChange}  />
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+
+
+              </Table>
+            )}
+
+          </>
+
+          :
+
+          <>
+            {isLoading ? (
+              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50">
+                <Spinner className="w-10 h-10 animate-spin text-gray-500" />
+              </div>
+            ) : (
+              <Table
+                className="overflow-x-scroll  text-nowrap custom-scrollbar"
+                aria-label="Order analysis table"
+                loading={isLoading}
+              >
+
+                <TableHeader>
+                  <TableColumn>#</TableColumn>
+                  <TableColumn>USER</TableColumn>
+                  <TableColumn>PARTY</TableColumn>
+                  <TableColumn>ORDER</TableColumn>
+                  <TableColumn>TITLE</TableColumn>
+                  <TableColumn>AMOUNT</TableColumn>
+                  <TableColumn>STATUS</TableColumn>
+                  <TableColumn>DUE DATE</TableColumn>
+                  {/* <TableColumn>ACTION</TableColumn> */}
+                </TableHeader>
+
+                <TableBody emptyContent="No Orders Found">
+                  {canceledOrder
+                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                    .map((order, index) => (
+                      <TableRow className="hover:bg-gray-100" key={order._id}>
+                        <TableCell>{index + 1}</TableCell>
+
+                        <TableCell>{order.user || "N/A"}</TableCell>
+
+                        <TableCell className="max-w-52">
+                          <div className="flex items-center gap-3">
+                            <div>
+                              <p className="font-semibold">{order.name}</p>
+                              <p className="text-sm text-gray-500">{order.phone}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+
+                        <TableCell>
+                          {order.orderImage ? (
+                            <img
+                              src={order.orderImage}
+                              className="w-10 h-10"
+                              alt="Order"
+                            />
+                          ) : (
+                            "No Image"
+                          )}
+                        </TableCell>
+
+                        <TableCell className="max-w-52">
+                          <p className="text-sm text-gray-500">{order.orderName}</p>
+                        </TableCell>
+
+                        <TableCell className="text-nowrap">
+                          {" "}
+                          {/* {order.totalPrice - order.amountPaid} R.S */}
+                          {order.totalPrice} R.S
+                        </TableCell>
+
+                        <TableCell>
+                          <span
+                            className={`px-4 text-xs py-1 rounded-full  ${order.totalPrice === order.amountPaid
+                              ? "bg-green-100 text-green-700" // Paid
+                              : new Date() > new Date(order.deadline)
+                                ? "bg-red-100 text-red-700" // Overdue
+                                : "bg-yellow-100 text-yellow-700" // Pending
+                              }`}
+                          >
+                            {order.totalPrice === order.amountPaid
+                              ? "Paid"
+                              : new Date() > new Date(order.deadline)
+                                ? "Overdue"
+                                : "Pending"}
+                          </span>
+                        </TableCell>
+
+                        <TableCell className="text-nowrap">
+                          <p className="text-sm">{order.deadline}</p>
+                        </TableCell>
+
+                      </TableRow>
+                    ))}
+                </TableBody>
+
+
+              </Table>
+            )}
+
+          </>
+
+      }
+
+
+
+      <Detail isOpen={isOpen} selectedOrder={selectedOrder} fetchOrders={fetchOrders} onOpenChange={onOpenChange} />
     </section>
   );
 }

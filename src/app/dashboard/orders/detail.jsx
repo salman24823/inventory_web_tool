@@ -9,14 +9,13 @@ import {
     Button,
     Input,
     Tabs,
-    Tab,
-    Select, SelectItem,
-    Textarea,
+    Tab
 } from "@heroui/react";
 import { useEffect, useState } from "react";
 import Invoice from "./Invoice";
+import { toast } from "react-toastify";
 
-export default function Detail({ isOpen, onOpenChange, selectedOrder }) {
+export default function Detail({ isOpen, onOpenChange, selectedOrder , fetchOrders }) {
     const [editing, setEditing] = useState(false);
     const [orderName, setOrderName] = useState(selectedOrder?.orderName || "");
     const [phone, setPhone] = useState(selectedOrder?.phone || "");
@@ -29,6 +28,8 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder }) {
     const [deadline, setDeadline] = useState(selectedOrder?.deadline || "");
     const [installments, setInstallments] = useState(selectedOrder?.installments || []);
     const [newInstallment, setNewInstallment] = useState({ amount: "", transactionType: "Cash", date: "" });
+
+    const [newQTY, setNewQTY] = useState(quantity);
 
     // Calculate pending amount
     const pendingAmount = Number(totalPrice) - Number(amountPaid);
@@ -50,11 +51,15 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder }) {
 
     // Function to handle confirmation and update the order
     async function handleConfirm() {
+
+        alert(`new QTY ${newQTY} , pre ${quantity}`)
+
         const updatedOrder = {
             ...selectedOrder,
             orderName,
             phone,
             quantity,
+            newQTY,
             quality,
             totalPrice,
             amountPaid,
@@ -63,9 +68,29 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder }) {
             installments,
         };
 
-        console.log("Updated Order:", updatedOrder);
-        // Add your logic to save the updated order (e.g., API call)
-        setEditing(false); // Exit editing mode
+        try {
+            const response = await fetch("/api/handleOrder", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ updatedOrder }),
+            });
+
+            if (!response.ok) {
+                toast.error(response.message);
+            }
+
+            toast.success("Success! Order updated")
+            setEditing(false); // Exit editing mode
+
+            fetchOrders()
+
+            onOpenChange(false); // Close the modal after success
+
+        } catch (error) {
+            console.error("Error updating order:", error);
+            setEditing(false); // Exit editing mode
+        }
+
     }
 
     // Function to add a new installment
@@ -80,28 +105,28 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder }) {
         }
     }
 
-    const [status, setStatus] = useState("completed"); // Default status
-    const [bgColor, setBgColor] = useState("bg-green-100"); // Default background color
+    // const [status, setStatus] = useState("completed"); 
+    // const [bgColor, setBgColor] = useState("bg-green-100"); 
 
-    const handleStatusChange = (e) => {
-        const selectedValue = e.target.value;
-        setStatus(selectedValue);
+    // const handleStatusChange = (e) => {
+    //     const selectedValue = e.target.value;
+    //     setStatus(selectedValue);
 
-        // Update background color based on the selected value
-        switch (selectedValue) {
-            case "completed":
-                setBgColor("bg-green-200"); // Light green for completed
-                break;
-            case "pending":
-                setBgColor("bg-yellow-200"); // Light yellow for pending
-                break;
-            case "cancel":
-                setBgColor("bg-white"); // Light red for cancel
-                break;
-            default:
-                setBgColor("bg-white"); // Default white
-        }
-    };
+    //     // Update background color based on the selected value
+    //     switch (selectedValue) {
+    //         case "completed":
+    //             setBgColor("bg-green-200"); // Light green for completed
+    //             break;
+    //         case "pending":
+    //             setBgColor("bg-yellow-200"); // Light yellow for pending
+    //             break;
+    //         case "cancel":
+    //             setBgColor("bg-white"); // Light red for cancel
+    //             break;
+    //         default:
+    //             setBgColor("bg-white"); // Default white
+    //     }
+    // };
 
     return (
         <>
@@ -115,6 +140,7 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder }) {
                                     <Tabs color="white" aria-label="Options">
                                         <Tab key="orderDetails" title="Order Details">
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 bg-slate-50 rounded-lg mt-6">
+
                                                 {/* Left Column */}
                                                 <div className="space-y-4">
                                                     <div className="flex justify-between items-center border-b border-gray-200">
@@ -147,16 +173,20 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder }) {
 
                                                     <div className="flex justify-between items-center border-b border-gray-200">
                                                         <h2 className="text-sm font-semibold text-gray-600">Quantity</h2>
+
+
                                                         {editing ? (
                                                             <Input
                                                                 size="sm"
                                                                 className="mt-1"
-                                                                value={quantity}
-                                                                onChange={(e) => setQuantity(e.target.value)}
+                                                                value={newQTY}
+                                                                onChange={(e) => setNewQTY(e.target.value)}
                                                             />
                                                         ) : (
                                                             <p className="text-gray-800 mt-1">{quantity}</p>
                                                         )}
+
+
                                                     </div>
 
                                                     <div className="flex justify-between items-center border-b border-gray-200">
@@ -186,7 +216,9 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder }) {
                                                             <p className="text-blue-600 font-semibold mt-1">{totalPrice}</p>
                                                         )}
                                                     </div>
-                                                    <div className="flex justify-between items-center border-b border-gray-200">
+
+                                                    {/* <>
+                                                        <div className="flex justify-between items-center border-b border-gray-200">
                                                         <h2 className="text-sm font-semibold text-gray-600">Order Status</h2>
 
                                                         <select
@@ -197,9 +229,11 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder }) {
                                                             <option className="!bg-white" value="completed">Completed</option>
                                                             <option className="!bg-white" value="pending">Pending</option>
                                                             <option className="!bg-white" value="cancel">Canceled</option>
-                                                        </select>
+                                                            </select>
+                                                            
+                                                            </div>
+                                                    </> */}
 
-                                                    </div>
                                                 </div>
 
                                                 {/* Right Column */}
@@ -273,6 +307,7 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder }) {
                                                     </div>
 
                                                 </div>
+
                                             </div>
                                         </Tab>
 
