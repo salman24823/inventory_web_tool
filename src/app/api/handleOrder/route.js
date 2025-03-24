@@ -23,7 +23,7 @@ export async function POST(req) {
   await dbConnection();
 
   try {
-    const data = await req.json();
+    const {data , user } = await req.json();
     const {
       name,
       phone,
@@ -91,6 +91,7 @@ export async function POST(req) {
     // Create order
     const newOrder = await orderModel.create({
       name,
+      user,
       phone,
       orderName: stockName,
       quantity: quantityNum,

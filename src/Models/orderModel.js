@@ -18,6 +18,7 @@ const InstallmentSchema = new mongoose.Schema(
 
 const OrderSchema = new mongoose.Schema(
   {
+    user: { type: String },
     name: { type: String },
     stockId: { type: mongoose.Schema.Types.ObjectId },
     phone: { type: String },

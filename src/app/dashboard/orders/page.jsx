@@ -324,6 +324,7 @@ export default function Inventory() {
 
                 <TableHeader>
                   <TableColumn>#</TableColumn>
+                  <TableColumn>USER</TableColumn>
                   <TableColumn>PARTY</TableColumn>
                   <TableColumn>ORDER</TableColumn>
                   <TableColumn>TITLE</TableColumn>
@@ -339,6 +340,7 @@ export default function Inventory() {
                     .map((order, index) => (
                       <TableRow className="hover:bg-gray-100" key={order._id}>
                         <TableCell>{index + 1}</TableCell>
+                        <TableCell>{order.user || "N/A"}</TableCell>
 
                         <TableCell className="max-w-52">
                           <div className="flex items-center gap-3">

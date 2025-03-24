@@ -14,6 +14,7 @@ import {
 } from "@heroui/react";
 import { toast } from "react-toastify";
 import { Plus } from "lucide-react";
+import { useSession } from "next-auth/react";
 // import { CldUploadWidget } from "next-cloudinary";
 
 export default function Action({ fetchOrders }) {
@@ -35,6 +36,10 @@ export default function Action({ fetchOrders }) {
   const [stockData, setStockData] = useState([]);
   const [selectedStock, setSelectedStock] = useState(null);
   const [transactionType, setTransactionType] = React.useState(null);
+
+  const { data: session } = useSession();
+      
+  const USER = session?.user?.name || null
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -120,6 +125,7 @@ export default function Action({ fetchOrders }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
+          user : USER,
           phone,
           stockName: selectedStock.stockName, // Use selectedStock.stockName
           quantity,

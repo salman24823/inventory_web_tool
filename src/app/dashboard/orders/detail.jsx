@@ -34,6 +34,8 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder, fetchOrder
     const [newQTY, setNewQTY] = useState(quantity);
     const [loading, setLoading] = useState(false);
 
+  
+
     // Calculate pending amount
     const pendingAmount = Number(totalPrice) - Number(amountPaid);
 
