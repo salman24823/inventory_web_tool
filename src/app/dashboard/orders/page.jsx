@@ -42,10 +42,10 @@ export default function Inventory() {
 
   const [selected, setSelected] = React.useState("Default");
 
-  const [ canceledOrder , setCanceledOrder ] = useState([])
+  const [canceledOrder, setCanceledOrder] = useState([])
 
-    const { data: session } = useSession();
-  
+  const { data: session } = useSession();
+
   const USER = session?.user?.name || null
 
   const fetchOrders = async () => {
@@ -142,7 +142,7 @@ export default function Inventory() {
       const response = await fetch("/api/handleOrder", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ order , USER }),
+        body: JSON.stringify({ order, USER }),
       });
 
       if (!response.ok) {
@@ -193,7 +193,7 @@ export default function Inventory() {
     onOpen()
   }
 
-  async function getCanceledOrder(){
+  async function getCanceledOrder() {
     try {
       const response = await fetch("/api/handleCanceledOrder");
       if (!response.ok) throw new Error("Failed to fetch");
@@ -412,15 +412,11 @@ export default function Inventory() {
                       </TableRow>
                     ))}
                 </TableBody>
-
-
               </Table>
             )}
 
           </>
-
           :
-
           <>
             {isLoading ? (
               <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50">
@@ -517,8 +513,6 @@ export default function Inventory() {
           </>
 
       }
-
-
 
       <Detail isOpen={isOpen} selectedOrder={selectedOrder} fetchOrders={fetchOrders} onOpenChange={onOpenChange} />
     </section>

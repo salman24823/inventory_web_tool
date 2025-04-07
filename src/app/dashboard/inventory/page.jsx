@@ -14,6 +14,7 @@ import {
   DropdownItem,
   useDisclosure,
   Button,
+  Tabs, Tab
 } from "@heroui/react";
 import { ChevronDown, X } from "lucide-react";
 import Action from "./action";
@@ -21,6 +22,8 @@ import { Spinner } from "@heroui/react";
 import { toast } from "react-toastify";
 import Detail from "./detail";
 import { Eye } from "lucide-react";
+import GrayCloth from "./Gray/GrayCloth";
+import ACTION from "./Gray/ACTION";
 
 export default function Stock() {
   const [selectedFilter, setSelectedFilter] = useState("All");
@@ -28,6 +31,7 @@ export default function Stock() {
   const [selectedYear, setSelectedYear] = useState("Select Year");
   const [loading, setLoading] = useState(false);
   const [Stocks, setStocks] = useState([]);
+  const [Cloths, setCloths] = useState([]);
   const [isLoading, setIsLoading] = React.useState(false);
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -35,7 +39,23 @@ export default function Stock() {
 
   const handleRowClick = (stock) => {
     setSelectedStock(stock);
+    console.log(stock)
     onOpen()
+  };
+
+  const fetchGrayCloth = async () => {
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/handleGrayCloth");
+      if (!response.ok) throw new Error("Failed to fetch");
+      const data = await response.json();
+      setCloths(data);
+
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching Stocks:", error);
+    }
   };
 
   const fetchStocks = async () => {
@@ -55,6 +75,7 @@ export default function Stock() {
 
   useEffect(() => {
     fetchStocks();
+    fetchGrayCloth()
   }, []);
 
   const months = [
@@ -146,6 +167,8 @@ export default function Stock() {
     }
   }
 
+  ////// gray vloth
+  const [selected, setSelected] = React.useState("Default");
 
   return (
     <section className="w-full flex flex-col gap-4">
@@ -228,123 +251,152 @@ export default function Stock() {
 
           <div className="flex gap-3">
 
-            <Action fetchStocks={fetchStocks} />
-            <Detail fetchStocks={fetchStocks} Stocks={Stocks} setStocks={setStocks} selectedStock={selectedStock} onOpen={onOpen} isOpen={isOpen} onOpenChange={onOpenChange} />
-
+            <Tabs color="white" aria-label="Options" selectedKey={selected} onSelectionChange={setSelected}>
+              <Tab key="Default" title="Default" />
+              <Tab key="Gray-Cloth" title="Gray Cloth" />
+            </Tabs>
+            {
+              selected === "Default" ?
+                <>
+                  <Action fetchStocks={fetchStocks} />
+                  <Detail fetchStocks={fetchStocks} selectedStock={selectedStock} onOpen={onOpen} isOpen={isOpen} onOpenChange={onOpenChange} />
+                </>
+                :
+                <>
+                  <ACTION fetchGrayCloth={fetchGrayCloth} />
+                  {/* <Detail fetcStocks={fetchStocks} selectedStock={selectedStock} onOpen={onOpen} isOpen={isOpen} onOpenChange={onOpenChange} /> */}
+                </>
+            }
           </div>
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50">
-          <Spinner className="w-10 h-10 animate-spin text-gray-500" />
-        </div>
-      ) : (
-        <Table
-          className="overflow-x-scroll text-nowrap custom-scrollbar"
-          aria-label="Stock analysis table"
-          loading={isLoading}
-        >
-          <TableHeader>
-            <TableColumn>#</TableColumn>
-            <TableColumn className="min-w-36">STOCK</TableColumn>
-            <TableColumn className="min-w-40 max-w-72">STOCK TITLE</TableColumn>
-            <TableColumn className="min-w-36">STATUS</TableColumn>
-            <TableColumn className="min-w-36">STOCK QUANTITY</TableColumn>
-            <TableColumn className="min-w-36">STOCK STATUS</TableColumn>
-            <TableColumn>ACTION</TableColumn>
-          </TableHeader>
+      {
+        selected === "Default" ?
+          // Default
+          <>
+            {
+              isLoading ?
+                (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50" >
+                    <Spinner className="w-10 h-10 animate-spin text-gray-500" />
+                  </div>
+                ) : (
+                  <Table
+                    className="overflow-x-scroll text-nowrap custom-scrollbar"
+                    aria-label="Stock analysis table"
+                    loading={isLoading}
+                  >
+                    <TableHeader>
+                      <TableColumn>#</TableColumn>
+                      <TableColumn className="min-w-36">STOCK</TableColumn>
+                      <TableColumn className="min-w-40 max-w-72">STOCK TITLE</TableColumn>
+                      <TableColumn className="min-w-36">STATUS</TableColumn>
+                      <TableColumn className="min-w-36">STOCK QUANTITY</TableColumn>
+                      <TableColumn className="min-w-36">STOCK STATUS</TableColumn>
+                      <TableColumn>ACTION</TableColumn>
+                    </TableHeader>
 
-          <TableBody emptyContent="No Stocks Found">
-            {filteredStocks
-              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-              .map((Stock, index) => (
-                <TableRow
-                  className="hover:bg-gray-100 space-x-10"
-                  key={Stock._id}
-                >
-                  <TableCell>{index + 1}</TableCell>
+                    <TableBody emptyContent="No Stocks Found">
+                      {filteredStocks
+                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                        .map((Stock, index) => (
+                          <TableRow
+                            className="hover:bg-gray-100 space-x-10"
+                            key={Stock._id}
+                          >
+                            <TableCell>{index + 1}</TableCell>
 
-                  <TableCell className="text-nowrap">
-                    {Stock.stockImage ? (
-                      <img
-                        src={Stock.stockImage}
-                        className="w-10 h-10"
-                        alt="Stock"
-                      />
-                    ) : (
-                      "No Image"
-                    )}
-                  </TableCell>
+                            <TableCell className="text-nowrap">
+                              {Stock.stockImage ? (
+                                <img
+                                  src={Stock.stockImage}
+                                  className="w-10 h-10"
+                                  alt="Stock"
+                                />
+                              ) : (
+                                "No Image"
+                              )}
+                            </TableCell>
 
-                  <TableCell className="text-nowrap">
+                            <TableCell className="text-nowrap">
 
-                    <p className="text-sm text-gray-500">{Stock.stockName}</p>
+                              <p className="text-sm text-gray-500">{Stock.stockName}</p>
 
-                  </TableCell>
+                            </TableCell>
 
-                  <TableCell>
-                    <span
-                      className={`px-4 text-xs py-1 rounded-full  ${Stock.totalPrice === Stock.amountPaid
-                        ? "bg-green-100 text-green-700" // Paid
-                        : new Date() > new Date(Stock.deadline)
-                          ? "bg-red-100 text-red-700" // Overdue
-                          : "bg-yellow-100 text-yellow-700" // Pending
-                        }`}
-                    >
-                      {Stock.totalPrice === Stock.amountPaid
-                        ? "Paid"
-                        : new Date() > new Date(Stock.deadline)
-                          ? "Overdue"
-                          : "Pending"}
-                    </span>
-                  </TableCell>
+                            <TableCell>
+                              <span
+                                className={`px-4 text-xs py-1 rounded-full  ${Stock.totalPrice === Stock.amountPaid
+                                  ? "bg-green-100 text-green-700" // Paid
+                                  : new Date() > new Date(Stock.deadline)
+                                    ? "bg-red-100 text-red-700" // Overdue
+                                    : "bg-yellow-100 text-yellow-700" // Pending
+                                  }`}
+                              >
+                                {Stock.totalPrice === Stock.amountPaid
+                                  ? "Paid"
+                                  : new Date() > new Date(Stock.deadline)
+                                    ? "Overdue"
+                                    : "Pending"}
+                              </span>
+                            </TableCell>
 
-                  <TableCell>
+                            <TableCell>
 
-                    <p className="text-sm text-gray-700">
-                      {" "}
-                      <span className="text-black font-semibold">
-                        {" "}
-                        {Stock.quantity}{" "}
-                      </span>{" "}
-                      {Stock.unit}{" "}
-                    </p>
+                              <p className="text-sm text-gray-700">
+                                {" "}
+                                <span className="text-black font-semibold">
+                                  {" "}
+                                  {Stock.quantity}{" "}
+                                </span>{" "}
+                                {Stock.unit}{" "}
+                              </p>
 
-                  </TableCell>
+                            </TableCell>
 
-                  <TableCell>
-                    <span
-                      className={`px-4 text-xs py-1 rounded-full  ${Stock.quantity > 0
-                        ? "bg-green-100 text-green-700" // In-Stock
-                        : "bg-red-100 text-red-700" // Out-of-Stock
-                        }`}
-                    >
-                      {Stock.quantity > 0 ? "In-Stock" : "Out-of-Stock"}
-                    </span>
-                  </TableCell>
+                            <TableCell>
+                              <span
+                                className={`px-4 text-xs py-1 rounded-full  ${Stock.quantity > 0
+                                  ? "bg-green-100 text-green-700" // In-Stock
+                                  : "bg-red-100 text-red-700" // Out-of-Stock
+                                  }`}
+                              >
+                                {Stock.quantity > 0 ? "In-Stock" : "Out-of-Stock"}
+                              </span>
+                            </TableCell>
 
-                  <TableCell className="text-nowrap">
-                    {loading === Stock._id ? (
-                      <Spinner size="sm" />
-                    ) : (
-                      <div className="flex gap-3 items-center">
-                        <Eye
-                          onClick={() => handleRowClick(Stock)}
-                          className="text-blue-600 hover:cursor-pointer" 
-                        />
-                        <X
-                          onClick={(e) => DeleteStock(e, Stock._id)}
-                          className="text-red-600 hover:cursor-pointer"
-                        />
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-          </TableBody>
-        </Table>
-      )}
-    </section>
+                            <TableCell className="text-nowrap">
+                              {loading === Stock._id ? (
+                                <Spinner size="sm" />
+                              ) : (
+                                <div className="flex gap-3 items-center">
+                                  <Eye
+                                    onClick={() => handleRowClick(Stock)}
+                                    className="text-blue-600 hover:cursor-pointer"
+                                  />
+                                  <X
+                                    onClick={(e) => DeleteStock(e, Stock._id)}
+                                    className="text-red-600 hover:cursor-pointer"
+                                  />
+                                </div>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </TableBody>
+                  </Table>
+                )
+            }
+          </>
+
+          :
+
+          // Gray Cloth
+          <>
+            <GrayCloth isLoading={isLoading} Cloths={Cloths} />
+          </>
+      }
+    </section >
   );
 }

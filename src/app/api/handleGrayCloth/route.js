@@ -1,8 +1,7 @@
 // app/api/handleStock/route.js
 import { NextResponse } from "next/server";
 import dbConnection from "@/config/dbConnection";
-
-import stockModel from "@/Models/stockModel";
+import grayModel from "@/Models/grayModel";
 
 export const revalidate = 0;
 
@@ -11,7 +10,7 @@ export const revalidate = 0;
 export async function GET() {
   try {
     await dbConnection();
-    const stocks = await stockModel.find({});
+    const stocks = await grayModel.find({});
     console.log(stocks,"stocks")
     return NextResponse.json(stocks, { status: 200 });
   } catch (error) {
@@ -28,7 +27,7 @@ export async function POST(request) {
     await dbConnection();
     const body = await request.json();
     console.log(body, "body");
-    const newStock = new stockModel(body);
+    const newStock = new grayModel(body);
     console.log(newStock, "newStock");
     await newStock.save();
     return NextResponse.json(newStock, { status: 201 });
@@ -55,7 +54,7 @@ export async function PUT(request) {
 
     console.log("Updating stocks:", stocks);
 
-    const updatedStock = await stockModel.findByIdAndUpdate(stocks._id, stocks, {
+    const updatedStock = await grayModel.findByIdAndUpdate(stocks._id, stocks, {
       new: true,
     });
 
@@ -82,13 +81,14 @@ export async function PUT(request) {
   }
 }
 
-// DELETE: Delete a stock
 export async function DELETE(request) {
   try {
     await dbConnection();
-    const { id } = await request.json();
 
-    const deletedStock = await stockModel.findByIdAndDelete(id);
+    const { id } = await request.json();
+    console.log("Attempting to delete ID:", id); // optional for debugging
+
+    const deletedStock = await grayModel.findByIdAndDelete(id);
 
     if (!deletedStock) {
       return NextResponse.json({ message: "Stock not found" }, { status: 404 });
@@ -99,6 +99,7 @@ export async function DELETE(request) {
       { status: 200 }
     );
   } catch (error) {
+    console.error("Delete failed:", error);
     return NextResponse.json(
       { message: "Failed to delete stock", error: error.message },
       { status: 500 }

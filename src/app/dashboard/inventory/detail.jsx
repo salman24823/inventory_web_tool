@@ -7,21 +7,39 @@ import {
   Button,
   Input,
 } from "@heroui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
 export default function Detail({ isOpen, onOpenChange, selectedStock, fetchStocks }) {
   const [editing, setEditing] = useState(false);
-  const [stockName, setStockName] = useState(selectedStock?.stockName || "");
-  const [quantity, setQuantity] = useState(selectedStock?.quantity || 0);
-  const [unit, setUnit] = useState(selectedStock?.unit || "");
-  const [quality, setQuality] = useState(selectedStock?.quality || "");
-  const [totalPrice, setTotalPrice] = useState(selectedStock?.totalPrice || 0);
-  const [amountPaid, setAmountPaid] = useState(selectedStock?.amountPaid || 0);
-  const [companyName, setCompanyName] = useState(selectedStock?.companyName || "");
-  const [phone, setPhone] = useState(selectedStock?.phone || "");
-  const [issueDate, setIssueDate] = useState(selectedStock?.issueDate || "");
-  const [deadline, setDeadline] = useState(selectedStock?.deadline || "");
+
+  const [stockName, setStockName] = useState(selectedStock?.stockName);
+  const [quantity, setQuantity] = useState(selectedStock?.quantity);
+  const [unit, setUnit] = useState(selectedStock?.unit);
+  const [quality, setQuality] = useState(selectedStock?.quality);
+  const [totalPrice, setTotalPrice] = useState(selectedStock?.totalPrice);
+  const [amountPaid, setAmountPaid] = useState(selectedStock?.amountPaid);
+  const [companyName, setCompanyName] = useState(selectedStock?.companyName);
+  const [phone, setPhone] = useState(selectedStock?.phone);
+  const [issueDate, setIssueDate] = useState(selectedStock?.issueDate);
+  const [deadline, setDeadline] = useState(selectedStock?.deadline);
+
+  useEffect(() => {
+    if (selectedStock) {
+      setEditing(false); // Add this
+      setStockName(selectedStock.stockName || '');
+      setQuantity(selectedStock.quantity || '');
+      setUnit(selectedStock.unit || '');
+      setQuality(selectedStock.quality || '');
+      setTotalPrice(selectedStock.totalPrice || '');
+      setAmountPaid(selectedStock.amountPaid || '');
+      setCompanyName(selectedStock.companyName || '');
+      setPhone(selectedStock.phone || '');
+      setIssueDate(selectedStock.issueDate || '');
+      setDeadline(selectedStock.deadline || '');
+    }
+  }, [selectedStock]);
+
 
   async function handleConfirm() {
     try {
@@ -66,10 +84,11 @@ export default function Detail({ isOpen, onOpenChange, selectedStock, fetchStock
             <>
               <ModalHeader className="flex flex-col gap-1">Detailed Overview :</ModalHeader>
               <ModalBody>
-                <div className="bg-white w-full">
+                <div onClick={() => console.log(selectedStock, "selectedStock")} className="bg-white w-full">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                     {/* Left Column */}
                     <div className="space-y-4">
+
                       <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
                         <h2 className="text-lg font-semibold text-gray-700">Stock Title</h2>
                         {editing ? (
@@ -80,12 +99,14 @@ export default function Detail({ isOpen, onOpenChange, selectedStock, fetchStock
                           <p className="text-gray-600">{stockName}</p>
                         )}
                       </div>
+
                       <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
                         <h2 className="text-lg font-semibold text-gray-700">Stock Status</h2>
-                        <p className={`font-medium ${selectedStock.quantity = 0 ? "text-red-600" : "text-green-600"}`}>
-                          {selectedStock.quantity = 0 ? "Out of Stock" : "In Stock"}
+                        <p className={`font-medium ${selectedStock.quantity == 0 ? "text-red-600" : "text-green-600"}`}>
+                          {selectedStock.quantity == 0 ? "Out of Stock" : "In Stock"}
                         </p>
                       </div>
+
                       <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
                         <div className="grid grid-cols-2">
                           <div>
@@ -136,7 +157,7 @@ export default function Detail({ isOpen, onOpenChange, selectedStock, fetchStock
                           </div>
                           <div>
                             <h2 className="text-lg font-semibold text-gray-700">Cost Per Unit</h2>
-                            <p className="text-gray-600">{(totalPrice / quantity).toFixed(2)} PKR</p>
+                            <p className="text-gray-600">{(Number(totalPrice) / Number(quantity)).toFixed(2)} PKR</p>
                           </div>
                         </div>
                       </div>
@@ -158,7 +179,7 @@ export default function Detail({ isOpen, onOpenChange, selectedStock, fetchStock
                           </div>
                           <div>
                             <h2 className="text-lg font-semibold text-gray-700">Remaining Amount</h2>
-                            <p className="text-gray-600">{totalPrice - amountPaid} PKR</p>
+                            <p className="text-gray-600">{Number(totalPrice) - Number(amountPaid)} PKR</p>
                           </div>
                         </div>
                       </div>
