@@ -7,6 +7,7 @@ import { Button, Spinner } from "@heroui/react";
 import { Coins } from "lucide-react";
 import { BanknoteIcon } from "lucide-react";
 import { Wallet } from "lucide-react";
+import { CoinsIcon } from "lucide-react";
 
 const Cards = () => {
   const [totalUsers, setTotalUsers] = useState(null);
@@ -66,9 +67,9 @@ const Cards = () => {
 
   const cardData = [
     {
-      title: "Total Customers",
-      value: loading ? <Spinner size="sm" /> : totalUsers ?? 0,
-      icon: <Users className="text-blue-500 w-6 h-6" />,
+      title: "Total Costs",
+      value: loading ? <Spinner size="sm" /> : 19000,
+      icon: <CoinsIcon className="text-blue-500 w-6 h-6" />,
       bgColor: "bg-blue-100",
       hoverBgColor: "hover:bg-blue-200",
     },
@@ -100,13 +101,13 @@ const Cards = () => {
     //   bgColor: "bg-blue-100",
     //   hoverBgColor: "hover:bg-blue-200",
     // },
-    {
-      title: "Wallet Amount",
-      value: loading ? <Spinner size="sm" /> : `PKR ${walletAmount ?? 400}`,
-      icon: <Wallet className="text-green-500 w-6 h-6" />,
-      bgColor: "bg-blue-100",
-      hoverBgColor: "hover:bg-blue-200",
-    },
+    // {
+    //   title: "Wallet Amount",
+    //   value: loading ? <Spinner size="sm" /> : `PKR ${walletAmount ?? 400}`,
+    //   icon: <Wallet className="text-green-500 w-6 h-6" />,
+    //   bgColor: "bg-blue-100",
+    //   hoverBgColor: "hover:bg-blue-200",
+    // },
     {
       title: "Bank Amount",
       value: loading ? <Spinner size="sm" /> : `PKR ${bankAmount ?? 3000}`,

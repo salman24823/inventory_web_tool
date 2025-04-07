@@ -1,10 +1,14 @@
 "use client";
 import { PrinterIcon } from "lucide-react";
 import { Printer } from "lucide-react";
+import { useSession } from "next-auth/react";
 import React, { useRef } from "react";
 
 const Invoice = ({ order }) => {
   const componentRef = useRef();
+
+    const { data: session } = useSession();
+  
 
   const handlePrint = () => {
     const printContent = componentRef.current.innerHTML;
@@ -100,6 +104,7 @@ const Invoice = ({ order }) => {
 
         <div className="mt-60 flex justify-between items-center gap-10">
           <div className="text-center">
+            {session?.user?.name}
             <p className="border-t border-gray-700 w-48 mx-auto"></p>
             <p className="mt-2 text-gray-800">Reference Name</p>
           </div>

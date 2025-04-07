@@ -1,5 +1,5 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Spinner } from '@heroui/react'
 import {
   Table,
@@ -125,7 +125,7 @@ const GrayCloth = ({ Cloths, isLoading }) => {
                   </TableCell>
 
                   <TableCell>
-                    <Button isLoading={loading} onPress={() => DeleteStock(Stock._id)}>Delete</Button>
+                    <Button size='sm' color='danger' isLoading={loading} onPress={() => DeleteStock(Stock._id)}>Delete</Button>
                   </TableCell>
 
                 </TableRow>
