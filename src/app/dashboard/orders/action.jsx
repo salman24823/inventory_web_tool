@@ -26,7 +26,7 @@ export default function Action({ fetchOrders }) {
   const [suggestions, setSuggestions] = useState([]);
 
   const [phone, setPhone] = useState("");
-  const [stockId, setStockId] = useState(""); // Changed from stockName to stockId
+  const [stockId, setStockId] = useState(""); // Changed from quality to stockId
   const [quantity, setQuantity] = useState("");
   const [quality, setQuality] = useState("");
   const [totalPrice, setTotalPrice] = useState("");
@@ -38,7 +38,7 @@ export default function Action({ fetchOrders }) {
   const [transactionType, setTransactionType] = React.useState(null);
 
   const { data: session } = useSession();
-      
+
   const USER = session?.user?.name || null
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -124,17 +124,17 @@ export default function Action({ fetchOrders }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          user : USER,
+          user: USER,
           name,
           phone,
-          stockName: selectedStock.stockName, // Use selectedStock.stockName
+          quality: selectedStock.quality, // Use selectedStock.quality
           quantity,
           totalPrice,
           amountPaid,
           issueDate,
           deadline,
+          unit : selectedStock.unit ,
           stockId,
-          quality,
           transactionType,
         }),
       });
@@ -230,7 +230,7 @@ export default function Action({ fetchOrders }) {
                         />
 
                         <Select
-                          label={stockId ? `Selected: ${selectedStock?.stockName || "N/A"}` : "Select Stock"}
+                          label={stockId ? `Selected: ${selectedStock?.quality || "N/A"}` : "Select Stock"}
                           value={stockId}
                           onChange={(e) => {
                             const selectedId = e.target.value;
@@ -245,7 +245,7 @@ export default function Action({ fetchOrders }) {
                         >
                           {stockData.map((stock) => (
                             <SelectItem key={stock._id} value={stock._id}>
-                              {stock.stockName} (Available: {stock.quantity})
+                              {stock.quality} (Available: {stock.quantity})
                             </SelectItem>
                           ))}
                         </Select>
@@ -279,13 +279,6 @@ export default function Action({ fetchOrders }) {
                           </p>
                         </div>
 
-                        <Input
-                          label="Quality"
-                          value={quality}
-                          onChange={(e) => setQuality(e.target.value)}
-                          required
-                        />
-
                       </div>
 
                       <div className="space-y-4">
@@ -298,17 +291,17 @@ export default function Action({ fetchOrders }) {
                         />
 
                         <div
-                          className={`grid grid-cols-2 border border-gray-200 py-4 rounded-lg px-5 ${selectedStock && selectedStock.totalPrice && selectedStock.quantity && quantity && totalPrice
-                            ? ((totalPrice / quantity) - (selectedStock.totalPrice / selectedStock.quantity)) > 0
-                              ? "bg-green-200" // Profit
-                              : "bg-red-200" // Loss
-                            : "bg-gray-100" // Default
+                          className={`grid grid-cols-2 border border-gray-200 py-4 rounded-lg px-5 ${selectedStock && selectedStock.costPerUnit && quantity && totalPrice
+                              ? (totalPrice / quantity - parseFloat(selectedStock.costPerUnit)) > 0
+                                ? "bg-green-200" // Profit
+                                : "bg-red-200" // Loss
+                              : "bg-gray-100" // Default
                             }`}
                         >
                           <p onClick={() => console.log(selectedStock, "selected stock")}>
                             <span className="font-semibold">Cost / Unit: </span>
-                            {selectedStock && selectedStock.totalPrice && selectedStock.quantity
-                              ? (selectedStock.totalPrice / selectedStock.quantity).toFixed(2)
+                            {selectedStock?.costPerUnit
+                              ? parseFloat(selectedStock.costPerUnit).toFixed(2)
                               : "N/A"}
                           </p>
                           <p>
@@ -317,11 +310,12 @@ export default function Action({ fetchOrders }) {
                           </p>
                           <p>
                             <span className="font-semibold">Profit / Unit: </span>
-                            {selectedStock && selectedStock.totalPrice && selectedStock.quantity && quantity && totalPrice
-                              ? ((totalPrice / quantity) - (selectedStock.totalPrice / selectedStock.quantity)).toFixed(2)
+                            {selectedStock?.costPerUnit && quantity && totalPrice
+                              ? ((totalPrice / quantity) - parseFloat(selectedStock.costPerUnit)).toFixed(2)
                               : "N/A"}
                           </p>
                         </div>
+
 
                         <Input
                           label="Amount Paid"
@@ -343,7 +337,6 @@ export default function Action({ fetchOrders }) {
                           type="date"
                           value={deadline}
                           onChange={(e) => setDeadline(e.target.value)}
-                          required
                         />
 
                         <div>
@@ -353,7 +346,7 @@ export default function Action({ fetchOrders }) {
                             label="Transaction Type">
                             <Radio value="Cash">Cash</Radio>
                             <Radio value="Bank">Bank</Radio>
-                            <Radio value="Wallet">Wallet</Radio>
+                            {/* <Radio value="Wallet">Wallet</Radio> */}
                           </RadioGroup>
                         </div>
 

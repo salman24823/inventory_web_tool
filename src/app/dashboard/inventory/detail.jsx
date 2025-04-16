@@ -24,9 +24,12 @@ export default function Detail({ isOpen, onOpenChange, selectedStock, fetchStock
   const [issueDate, setIssueDate] = useState(selectedStock?.issueDate);
   const [deadline, setDeadline] = useState(selectedStock?.deadline);
 
+  const [costPerUnit, setCostPerUnit] = useState(selectedStock?.costPerUnit);
+
   useEffect(() => {
     if (selectedStock) {
       setEditing(false); // Add this
+      setCostPerUnit(selectedStock.costPerUnit || '');
       setStockName(selectedStock.stockName || '');
       setQuantity(selectedStock.quantity || '');
       setUnit(selectedStock.unit || '');
@@ -46,6 +49,7 @@ export default function Detail({ isOpen, onOpenChange, selectedStock, fetchStock
       const updatedStock = {
         ...selectedStock,
         stockName,
+        costPerUnit,
         quantity,
         unit,
         quality,
@@ -90,13 +94,13 @@ export default function Detail({ isOpen, onOpenChange, selectedStock, fetchStock
                     <div className="space-y-4">
 
                       <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
-                        <h2 className="text-lg font-semibold text-gray-700">Stock Title</h2>
+                        <h2 className="text-lg font-semibold text-gray-700">Stock Quality</h2>
                         {editing ? (
                           <Input
                             className="border border-gray-400 rounded-none"
-                            value={stockName} onChange={(e) => setStockName(e.target.value)} />
+                            value={quality} onChange={(e) => setQuality(e.target.value)} />
                         ) : (
-                          <p className="text-gray-600">{stockName}</p>
+                          <p className="text-gray-600">{quality}</p>
                         )}
                       </div>
 
@@ -122,21 +126,6 @@ export default function Detail({ isOpen, onOpenChange, selectedStock, fetchStock
                               <p className="text-gray-600">{quantity} {unit}</p>
                             )}
                           </div>
-                          <div>
-                            <h2 className="text-lg font-semibold text-gray-700">Stock Quality</h2>
-                            {editing ? (
-                              <Input
-                                className="border border-gray-400 rounded-none"
-
-                                type="text"
-                                value={quality}
-                                onChange={(e) => setQuality(e.target.value)}
-                                placeholder="Enter quality"
-                              />
-                            ) : (
-                              <p className="text-gray-600">{quality || "Null"}</p>
-                            )}
-                          </div>
                         </div>
                       </div>
                       <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
@@ -155,10 +144,18 @@ export default function Detail({ isOpen, onOpenChange, selectedStock, fetchStock
                               <p className="text-gray-600">{totalPrice} PKR</p>
                             )}
                           </div>
+
                           <div>
                             <h2 className="text-lg font-semibold text-gray-700">Cost Per Unit</h2>
-                            <p className="text-gray-600">{(Number(totalPrice) / Number(quantity)).toFixed(2)} PKR</p>
+                            {editing ? (
+                              <Input
+                                className="border border-gray-400 rounded-none"
+                                value={costPerUnit} onChange={(e) => setCostPerUnit(e.target.value)} />
+                            ) : (
+                              <p className="text-gray-600">{costPerUnit} PKR</p>
+                            )}
                           </div>
+
                         </div>
                       </div>
                       <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
@@ -236,23 +233,27 @@ export default function Detail({ isOpen, onOpenChange, selectedStock, fetchStock
                       <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
                         <h2 className="text-lg font-semibold text-gray-700">Payment Status</h2>
                         <p className={`font-medium ${amountPaid >= totalPrice ? "text-green-600" : "text-red-600"}`}>
-                          {amountPaid >= totalPrice ? "Paid" : "Unpaid"}
+                          {amountPaid >= totalPrice ? "Clear" : "Pending Payment"}
                         </p>
                       </div>
-                      <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
-                        <h2 className="text-lg font-semibold text-gray-700">Payment Deadline</h2>
-                        {editing ? (
-                          <Input
-                            className="border border-gray-400 rounded-none"
+                      {deadline !== "" ?
+                        <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
+                          <h2 className="text-lg font-semibold text-gray-700">Payment Deadline</h2>
+                          {editing ? (
+                            <Input
+                              className="border border-gray-400 rounded-none"
 
-                            type="date"
-                            value={deadline}
-                            onChange={(e) => setDeadline(e.target.value)}
-                          />
-                        ) : (
-                          <p className="text-gray-600">{new Date(deadline).toLocaleDateString()}</p>
-                        )}
-                      </div>
+                              type="date"
+                              value={deadline}
+                              onChange={(e) => setDeadline(e.target.value)}
+                            />
+                          ) : (
+                            <p className="text-red-600 font-semibold">{new Date(deadline).toLocaleDateString()}</p>
+                          )}
+                        </div>
+                        :
+                        ""
+                      }
                     </div>
                   </div>
                 </div>

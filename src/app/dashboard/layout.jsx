@@ -29,7 +29,7 @@ const Layout = ({ children }) => {
       icon: <Home className="w-5 h-5 text-gray-600" />,
     },
     {
-      name: "Customers",
+      name: "Customers History",
       path: "/dashboard/customers",
       icon: <User className="w-5 h-5 text-gray-600" />,
     },
@@ -44,7 +44,7 @@ const Layout = ({ children }) => {
       icon: <Box className="w-5 h-5 text-gray-600" />,
     },
     {
-      name: "Order",
+      name: "Sales",
       path: "/dashboard/orders",
       icon: <Album className="w-5 h-5 text-gray-600" />,
     },
@@ -112,7 +112,7 @@ const Layout = ({ children }) => {
                     >
                       <Link
                         href={route.path}
-                        className={`flex items-center gap-3 p-3 w-full text-sm ${
+                        className={`flex items-center gap-3 p-3 w-full text-medium font-semibold ${
                           pathname === route.path
                             ? "font-semibold text-blue-600 bg-blue-50 border-r-4 border-blue-500"
                             : "text-gray-600 hover:text-blue-500"
@@ -128,7 +128,7 @@ const Layout = ({ children }) => {
                 {/* Logout Button */}
                 <li>
                   <Button
-                    className="w-full bg-white text-gray-600 flex justify-start p-3 text-sm hover:bg-gray-50 hover:text-blue-500 transition-all duration-300 ease-in-out"
+                    className="w-full bg-white text-medium font-semibold text-gray-600 flex justify-start p-3 hover:bg-gray-50 hover:text-blue-500 transition-all duration-300 ease-in-out"
                     radius="none"
                     onPress={logout}
                   >

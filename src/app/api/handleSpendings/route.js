@@ -18,9 +18,9 @@ export async function GET() {
 export async function POST(req) {
   try {
     await dbConnect();
-    const { amount, description, date } = await req.json();
+    const { amount, description, date , Method } = await req.json();
 
-    const newSpending = new Spending({ amount, description, date });
+    const newSpending = new Spending({ amount, description, date , method : Method});
     await newSpending.save();
 
     return NextResponse.json({ message: "Record added successfully" }, { status: 201 });

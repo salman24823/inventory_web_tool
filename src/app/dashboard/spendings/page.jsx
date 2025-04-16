@@ -179,6 +179,7 @@ export default function Spendings() {
             <TableColumn>AMOUNT</TableColumn>
             <TableColumn>DESCRIPTION</TableColumn>
             <TableColumn>DATE</TableColumn>
+            <TableColumn>METHOD</TableColumn>
             <TableColumn>ACTION</TableColumn>
           </TableHeader>
           <TableBody emptyContent="No Spendings Found">
@@ -195,6 +196,7 @@ export default function Spendings() {
                     timeZone: "Asia/Karachi",
                   })}
                 </TableCell>
+                <TableCell>{spending.method}</TableCell>
 
                 <TableCell>
                   {loading === spending._id ? (

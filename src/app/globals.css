@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+@media print {
+  .print-payable {
+    background-color: rgb(84, 82, 82) !important; /* Tailwind red-500 */
+    color: white !important;
+    -webkit-print-color-adjust: exact; /* For Chrome */
+    print-color-adjust: exact;
+  }
+}
+
+
 /* scroll bar */
 
 .custom-scrollbar::-webkit-scrollbar {

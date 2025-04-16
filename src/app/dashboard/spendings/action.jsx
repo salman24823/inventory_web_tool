@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Modal,
   ModalContent,
@@ -7,6 +7,7 @@ import {
   ModalFooter,
   Button,
   Input,
+  RadioGroup, Radio
 } from "@heroui/react";
 import { toast } from "react-toastify";
 
@@ -16,6 +17,8 @@ export default function Action({ fetchSpendings, isOpen, onOpenChange }) {
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState("");
 
+  const [Method, setMethod] = React.useState("bank");
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -24,7 +27,7 @@ export default function Action({ fetchSpendings, isOpen, onOpenChange }) {
       const response = await fetch("/api/handleSpendings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description, amount, date }),
+        body: JSON.stringify({ description, amount, date , Method }),
       });
 
       if (!response.ok) {
@@ -75,6 +78,14 @@ export default function Action({ fetchSpendings, isOpen, onOpenChange }) {
                     onChange={(e) => setDate(e.target.value)}
                     required
                   />
+                  <RadioGroup
+                    label="Pay Mathod"
+                    value={Method}
+                    onValueChange={setMethod}
+                  >
+                    <Radio value="bank">Bank</Radio>
+                    <Radio value="cash">Cash</Radio>
+                  </RadioGroup>
                   <ModalFooter>
                     <Button color="danger" variant="light" onPress={onClose}>
                       Close

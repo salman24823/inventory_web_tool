@@ -37,8 +37,13 @@ export default function Action({ fetchStocks }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     setLoading(true);
+
+    const parsedTotal = parseFloat(totalPrice);
+    const parsedQuantity = parseFloat(quantity);
+    const parsedAmountPaid = parseFloat(amountPaid);
+
+    const costPerUnit = parsedQuantity > 0 ? (parsedTotal / parsedQuantity).toFixed(2) : "0.00";
 
     try {
       const response = await fetch("/api/handleStock", {
@@ -48,15 +53,16 @@ export default function Action({ fetchStocks }) {
           companyName,
           phone,
           stockName,
-          totalPrice,
-          amountPaid,
-          quantity,
-          unit, // Include the selected unit
+          totalPrice: parsedTotal,
+          amountPaid: parsedAmountPaid,
+          quantity: parsedQuantity,
+          unit,
           quality,
           issueDate,
+          costPerUnit, // as string "123.45"
           deadline,
           stockImage,
-          companyLogo, // Include company logo in the request
+          companyLogo,
         }),
       });
 
@@ -65,9 +71,21 @@ export default function Action({ fetchStocks }) {
       }
 
       toast.success("Successfully uploaded");
+      fetchStocks();
+      setCompanyName("");
+      setPhone("");
+      setStockName("");
+      setTotalPrice("");
+      setAmountPaid("");
+      setQuantity("");
+      setUnit("");
+      setQuality("");
+      setIssueDate("");
+      setDeadline("");
+      setStockImage("");
+      setCompanyLogo("");
 
-      fetchStocks(); // Refresh the stock list
-      onOpenChange(false); // Close the modal on success
+      onOpenChange(false);
     } catch (error) {
       console.error(error);
       toast.error("Error in Uploading");
@@ -75,6 +93,7 @@ export default function Action({ fetchStocks }) {
       setLoading(false);
     }
   };
+
 
   return (
     <>
@@ -120,12 +139,22 @@ export default function Action({ fetchStocks }) {
 
                       <Input
                         className="border border-gray-300 rounded-xl"
+                        label="Quality"
+                        type="text"
+                        value={quality}
+                        onChange={(e) => setQuality(e.target.value)}
+                        required
+                      />
+
+                      {/* 
+                      <Input
+                        className="border border-gray-300 rounded-xl"
                         label="Stock Name"
                         type="text"
                         value={stockName}
                         onChange={(e) => setStockName(e.target.value)}
                         required
-                      />
+                      /> */}
 
                       <Input
                         className="border border-gray-300 rounded-xl"
@@ -210,15 +239,6 @@ export default function Action({ fetchStocks }) {
 
                       <Input
                         className="border border-gray-300 rounded-xl"
-                        label="Quality"
-                        type="text"
-                        value={quality}
-                        onChange={(e) => setQuality(e.target.value)}
-                        required
-                      />
-
-                      <Input
-                        className="border border-gray-300 rounded-xl"
                         label="Issue Date"
                         type="date"
                         value={issueDate}
@@ -232,7 +252,6 @@ export default function Action({ fetchStocks }) {
                         type="date"
                         value={deadline}
                         onChange={(e) => setDeadline(e.target.value)}
-                        required
                       />
 
                       <div className="flex flex-col gap-5">

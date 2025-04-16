@@ -1,14 +1,11 @@
 "use client";
 import { PrinterIcon } from "lucide-react";
-import { Printer } from "lucide-react";
 import { useSession } from "next-auth/react";
 import React, { useRef } from "react";
 
 const Invoice = ({ order }) => {
   const componentRef = useRef();
-
-    const { data: session } = useSession();
-  
+  const { data: session } = useSession();
 
   const handlePrint = () => {
     const printContent = componentRef.current.innerHTML;
@@ -17,103 +14,114 @@ const Invoice = ({ order }) => {
     document.body.innerHTML = printContent;
     window.print();
     document.body.innerHTML = originalContent;
-    window.location.reload(); // Reload to restore the original content
+    window.location.reload();
   };
+
+  const transaction = order.installments?.[0] || {};
+  const totalPrice = parseInt(order.totalPrice || "0");
+  const amountPaid = parseInt(order.amountPaid || "0");
+  const pendingAmount = totalPrice - amountPaid;
 
   return (
     <div>
-      <button
-        onClick={handlePrint}
-      >
+      <button onClick={handlePrint}>
         <PrinterIcon className="text-blue-600 w-6 h-6" />
       </button>
 
       {/* Print Area */}
       <div ref={componentRef} className="bg-white p-5 hidden max-w-md mx-auto">
-        {/* Company Header */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold">Your Company Name</h1>
-          <p className="text-sm">123 Company Address, City, State, ZIP</p>
-          <p className="text-sm">Phone: (123) 456-7890 | Email: info@company.com</p>
-          <p className="text-sm">Website: www.company.com</p>
+        {/* Header */}
+        <div className="flex justify-between items-start mb-10">
+          <div>
+            <h1 className="text-2xl font-bold m-0">YOUR COMPANY NAME</h1>
+            <p className="text-sm my-1">123 Anywhere St., Any City</p>
+            <p className="text-sm my-1">123-456-7890 | company@gmail.com</p>
+            <p className="text-sm my-1">Website : company.com</p>
+          </div>
+          <div className="text-right">
+            <h2 className="text-2xl font-bold m-0">INVOICE</h2>
+            <p className="text-lg my-1">{order._id?.slice(-6).toUpperCase() || "#"}</p>
+          </div>
         </div>
 
-        {/* Invoice Title */}
-        <h2 className="text-xl font-bold text-center mb-4 border-b-2 border-black pb-2">
-          INVOICE
-        </h2>
+        <hr className="border-gray-200 my-6" />
 
-        {/* Customer and Order Details */}
-        <table className="w-full mb-6">
-          <tbody>
-            <tr>
-              <td className="font-bold py-1">Invoice Number:</td>
-              <td className="py-1">
-                {/* {order.invoiceNumber} */}
-                267
-                </td>
-              <td className="font-bold py-1">Issue Date:</td>
-              <td className="py-1">{order.issueDate}</td>
-            </tr>
-            <tr>
-              <td className="font-bold py-1">Customer Name:</td>
-              <td className="py-1">{order.name}</td>
-              {/* <td className="font-bold py-1">Deadline:</td> */}
-              {/* <td className="py-1">{order.deadline}</td> */}
-            </tr>
-            <tr>
-              <td className="font-bold py-1">Phone:</td>
-              <td className="py-1">{order.phone}</td>
-              <td className="font-bold py-1">Order:</td>
-              <td className="py-1">{order.orderName}</td>
-            </tr>
-          </tbody>
-        </table>
+        {/* Billing Info */}
+        <div className="flex justify-between mb-10">
+          <div>
+            <h3 className="text-base font-bold mb-2">INVOICE TO:</h3>
+            <p className="text-sm my-1">{order.name}</p>
+            <p className="text-sm my-1">{order.phone}</p>
+          </div>
+          <div className="text-right">
+            <h3 className="text-base font-bold mb-2">ISSUE DATE</h3>
+            <p className="text-base my-1">{order.issueDate || "N/A"}</p>
+            <p className="text-green-500 font-bold">
+              {totalPrice === amountPaid ? "Paid" : "Pending"}
+            </p>
+          </div>
+        </div>
 
-        {/* Order Summary Table */}
-        <table className="w-full border-collapse border border-black mb-6">
+        {/* Table */}
+        <table className="w-full mb-10 border-collapse">
           <thead>
-            <tr className="bg-gray-200">
-              <th className="border border-black p-2">Description</th>
-              <th className="border border-black p-2">Amount</th>
+            <tr className="print-payable">
+              <th className="text-white text-left py-3 px-4 font-semibold">QUALITY</th>
+              <th className="text-white text-left py-3 px-4 font-semibold">QUANTITY</th>
+              <th className="text-white text-left py-3 px-4 font-semibold">RATE</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td className="border border-black p-2">Total Price</td>
-              <td className="border border-black p-2">Rs. {order.totalPrice}</td>
-            </tr>
-            <tr>
-              <td className="border border-black p-2">Amount Paid</td>
-              <td className="border border-black p-2">Rs. {order.amountPaid}</td>
-            </tr>
-            <tr>
-              <td className="border border-black p-2 font-bold">Amount Pending</td>
-              <td className="border border-black p-2 font-bold">
-                Rs. {order.totalPrice - order.amountPaid}
+              <td className="border border-gray-300 py-3 px-4">{order.quality}</td>
+              <td className="border border-gray-300 py-3 px-4">{order.quantity} Meter</td>
+              <td className="border border-gray-300 py-3 px-4">
+                {totalPrice / parseInt(order.quantity)} / Meter
               </td>
             </tr>
           </tbody>
         </table>
 
-        {/* Footer */}
-        <div className="text-center text-sm mt-6">
-          <p>Thank you for your business!</p>
-          <p>Please make payments payable to: Your Company Name</p>
+        {/* Summary */}
+        <div className="flex justify-end mb-10 ">
+          <div className="w-72">
+            <div className="flex justify-between mb-2">
+              <span>Total Amount:</span>
+              <span>{totalPrice} PKR</span>
+            </div>
+            <div className="flex justify-between mb-2">
+              <span>Pending Amount:</span>
+              <span>{pendingAmount} PKR</span>
+            </div>
+            <div className="flex justify-between mb-2">
+              <span>Transaction Type:</span>
+              <span>{transaction.transactionType || "NA"}</span>
+            </div>
+            <div className="flex justify-between print-payable p-3">
+              <span>Amount Paid:</span>
+              <span>{amountPaid} PKR</span>
+            </div>
+          </div>
         </div>
 
-        <div className="mt-60 flex justify-between items-center gap-10">
+        {/* Footer */}
+        <div className="text-center mb-10">
+          <p className="text-base">Thank you for your business! Please make payments payable to: Your Company Name</p>
+        </div>
+
+        <div className="mt-20 flex justify-between items-center gap-10">
           <div className="text-center">
             {session?.user?.name}
-            <p className="border-t border-gray-700 w-48 mx-auto"></p>
+            <p className="border-t border-black w-48 mx-auto"></p>
             <p className="mt-2 text-gray-800">Reference Name</p>
           </div>
           <div className="text-center">
-            <p className="border-t border-gray-700 w-48 mx-auto"></p>
-            <p className="mt-2 text-gray-800">Admin</p>
+            <p className="border-t border-black w-48 mx-auto"></p>
+            <p className="mt-2 text-gray-800">Administration</p>
           </div>
         </div>
 
+        <div className="bg-black h-8 mt-24"></div>
       </div>
     </div>
   );

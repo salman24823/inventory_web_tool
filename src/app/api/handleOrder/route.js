@@ -3,6 +3,8 @@ import dbConnection from "@/config/dbConnection";
 import orderModel from "@/Models/orderModel";
 import stockModel from "@/Models/stockModel";
 import canceledOrderModel from "@/Models/canceledOrderModel";
+import cashModel from "@/Models/totalCash";
+import bankModel from "@/Models/bankModel";
 
 export const revalidate = 0;
 
@@ -25,13 +27,14 @@ export async function POST(req) {
   try {
     const data = await req.json();
 
-    console.log(data,"data")
+    console.log(data, "data");
 
     const {
       name,
       phone,
       user,
-      stockName,
+      unit,
+      // stockName,
       quantity,
       totalPrice,
       amountPaid,
@@ -53,15 +56,14 @@ export async function POST(req) {
     if (
       !name ||
       !phone ||
-      !stockName ||
       !quantityNum ||
       !totalPrice ||
       !amountPaidNum ||
       !issueDate ||
-      !deadline ||
       !stockId ||
       !transactionType
     ) {
+      console.log("Missing required fields");
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -97,7 +99,8 @@ export async function POST(req) {
       name,
       user,
       phone,
-      orderName: stockName,
+      unit,
+      // orderName: stockName,
       quantity: quantityNum,
       totalPrice,
       amountPaid: amountPaidNum,
@@ -113,6 +116,18 @@ export async function POST(req) {
     await stockModel.findByIdAndUpdate(stockId, {
       $inc: { quantity: -quantityNum },
     });
+
+    if (transactionType === "Cash") {
+      await cashModel.create({
+        totalCash: amountPaidNum,
+      });
+    } else {
+      await bankModel.create({
+        totalBank: amountPaidNum,
+      });
+    }
+
+    await newOrder.save();
 
     console.log(newOrder, "New Order Created");
 
@@ -131,14 +146,19 @@ export async function POST(req) {
 
 export async function DELETE(req) {
   await dbConnection(); // Ensure DB connection
+
   try {
     const { order, USER } = await req.json(); // Parse request body
+
+    // Hardcoded IDs for cash and bank
+    const cashId = "67fec0187fed8958f6caeaa3";
+    const bankId = "67fec2567fed8958f6caeadb";
 
     if (!order || !order._id || !order.stockId || !order.quantity || !USER) {
       return NextResponse.json(
         {
           success: false,
-          message: "Order ID, stock ID, and quantity are required",
+          message: "Order ID, stock ID, quantity, and user are required",
         },
         { status: 400 }
       );
@@ -158,11 +178,11 @@ export async function DELETE(req) {
       deadline,
       orderImage,
       userImage,
-      installments,
+      installments = [],
     } = order;
 
-    const canceledOrder = await canceledOrderModel.create({
-      // _id, // Explicitly set _id if required
+    // Save canceled order
+    await canceledOrderModel.create({
       name,
       stockId,
       phone,
@@ -179,16 +199,13 @@ export async function DELETE(req) {
       installments,
     });
 
-    // await canceledOrder.create();
-
-    // Increment stock quantity when deleting an order
-    await stockModel.findByIdAndUpdate(order.stockId, {
-      $inc: { quantity: Number(order.quantity) }, // Increment stock
+    // Restore stock quantity
+    await stockModel.findByIdAndUpdate(stockId, {
+      $inc: { quantity: Number(quantity) },
     });
 
-    // Delete the order
-    const deletedOrder = await orderModel.findByIdAndDelete(order._id);
-
+    // Remove order
+    const deletedOrder = await orderModel.findByIdAndDelete(_id);
     if (!deletedOrder) {
       return NextResponse.json(
         { success: false, message: "Order not found" },
@@ -196,11 +213,38 @@ export async function DELETE(req) {
       );
     }
 
+    let totalCash = 0;
+    let totalBank = 0;
+
+    // Calculate total amounts for Cash and Bank installments
+    for (const installment of installments) {
+      if (installment.transactionType === "Cash") {
+        totalCash += Number(installment.amount);
+      } else if (installment.transactionType === "Bank") {
+        totalBank += Number(installment.amount);
+      }
+    }
+
+    // Decrement from cashModel if there is a cash amount
+    if (totalCash > 0) {
+      await cashModel.findByIdAndUpdate(cashId, {
+        $inc: { totalCash: -totalCash },
+      });
+    }
+
+    // Decrement from bankModel if there is a bank amount
+    if (totalBank > 0) {
+      await bankModel.findByIdAndUpdate(bankId, {
+        $inc: { totalBank: -totalBank },
+      });
+    }
+
     console.log(deletedOrder, "Order Deleted");
 
     return NextResponse.json({
       success: true,
-      message: "Order deleted successfully, stock updated",
+      message:
+        "Order deleted successfully, stock updated, and payment decremented",
     });
   } catch (error) {
     console.error("Error deleting order:", error);
@@ -216,6 +260,9 @@ export async function PUT(req) {
 
   try {
     const body = await req.json(); // Parse request body
+
+    const cashId = "67fec0187fed8958f6caeaa3";
+    const bankId = "67fec2567fed8958f6caeadb";
 
     if (!body || !body.updatedOrder) {
       return NextResponse.json(

@@ -20,8 +20,6 @@ import { ChevronDown, X } from "lucide-react";
 import Action from "./action";
 import { Spinner } from "@heroui/react";
 import { toast } from "react-toastify";
-import { Pencil } from "lucide-react";
-import { Check } from "lucide-react";
 import { Eye } from "lucide-react";
 import Detail from "./detail";
 import { useSession } from "next-auth/react";
@@ -327,10 +325,10 @@ export default function Inventory() {
                   <TableColumn>USER</TableColumn>
                   <TableColumn>PARTY</TableColumn>
                   <TableColumn>ORDER</TableColumn>
-                  <TableColumn>TITLE</TableColumn>
+                  <TableColumn>QUALITY</TableColumn>
+                  <TableColumn>TOTAL</TableColumn>
                   <TableColumn>PENDING</TableColumn>
                   <TableColumn>STATUS</TableColumn>
-                  <TableColumn>DUE DATE</TableColumn>
                   <TableColumn>ACTION</TableColumn>
                 </TableHeader>
 
@@ -340,7 +338,7 @@ export default function Inventory() {
                     .map((order, index) => (
                       <TableRow className="hover:bg-gray-100" key={order._id}>
                         <TableCell>{index + 1}</TableCell>
-                        <TableCell>{order.user || "N/A"}</TableCell>
+                        <TableCell>{order.user || "N/A"} </TableCell>
 
                         <TableCell className="max-w-52">
                           <div className="flex items-center gap-3">
@@ -364,7 +362,12 @@ export default function Inventory() {
                         </TableCell>
 
                         <TableCell className="max-w-52">
-                          <p className="text-sm text-gray-500">{order.orderName}</p>
+                          <p className="text-sm text-gray-500">{order.quality}</p>
+                        </TableCell>
+
+                        <TableCell className="text-nowrap">
+                          {/* <p className="text-sm">{order.deadline? order.deadline : "N/A" }</p> */}
+                          <p className="text-sm">{order.totalPrice? order.totalPrice : "N/A" }</p>
                         </TableCell>
 
                         <TableCell className="text-nowrap">
@@ -387,10 +390,6 @@ export default function Inventory() {
                                 ? "Overdue"
                                 : "Pending"}
                           </span>
-                        </TableCell>
-
-                        <TableCell className="text-nowrap">
-                          <p className="text-sm">{order.deadline}</p>
                         </TableCell>
 
                         <TableCell className="text-nowrap">

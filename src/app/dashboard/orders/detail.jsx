@@ -34,7 +34,7 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder, fetchOrder
     const [newQTY, setNewQTY] = useState(quantity);
     const [loading, setLoading] = useState(false);
 
-  
+
 
     // Calculate pending amount
     const pendingAmount = Number(totalPrice) - Number(amountPaid);
@@ -150,16 +150,16 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder, fetchOrder
                                                 {/* Left Column */}
                                                 <div className="space-y-4">
                                                     <div className="flex justify-between items-center border-b border-gray-200">
-                                                        <h2 className="text-sm font-semibold text-gray-600">Order Name</h2>
+                                                        <h2 className="text-sm font-semibold text-gray-600">Quality</h2>
                                                         {editing ? (
                                                             <Input
                                                                 size="sm"
                                                                 className="mt-1"
-                                                                value={orderName}
-                                                                onChange={(e) => setOrderName(e.target.value)}
+                                                                value={quality}
+                                                                onChange={(e) => setQuality(e.target.value)}
                                                             />
                                                         ) : (
-                                                            <p className="text-gray-800 mt-1">{orderName}</p>
+                                                            <p className="text-gray-800 mt-1">{quality}</p>
                                                         )}
                                                     </div>
 
@@ -189,13 +189,14 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder, fetchOrder
                                                                 onChange={(e) => setNewQTY(e.target.value)}
                                                             />
                                                         ) : (
-                                                            <p className="text-gray-800 mt-1">{quantity}</p>
+                                                            <p className="text-gray-800 mt-1">{quantity} {selectedOrder.unit} </p>
                                                         )}
+                                                        
 
 
                                                     </div>
 
-                                                    <div className="flex justify-between items-center border-b border-gray-200">
+                                                    {/* <div className="flex justify-between items-center border-b border-gray-200">
                                                         <h2 className="text-sm font-semibold text-gray-600">Quality</h2>
                                                         {editing ? (
                                                             <Input
@@ -207,7 +208,7 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder, fetchOrder
                                                         ) : (
                                                             <p className="text-gray-800 mt-1">{quality}</p>
                                                         )}
-                                                    </div>
+                                                    </div> */}
 
                                                     <div className="flex justify-between items-center border-b border-gray-200">
                                                         <h2 className="text-sm font-semibold text-gray-600">Total Price</h2>
@@ -289,7 +290,7 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder, fetchOrder
                                                                 onChange={(e) => setDeadline(e.target.value)}
                                                             />
                                                         ) : (
-                                                            <p className="text-gray-800 mt-1">{deadline}</p>
+                                                            <p className="text-gray-800 mt-1">{deadline || "N/A"}</p>
                                                         )}
                                                     </div>
 
@@ -367,7 +368,7 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder, fetchOrder
                                                             >
                                                                 <Radio value="Cash">Cash</Radio>
                                                                 <Radio value="Bank">Bank</Radio>
-                                                                <Radio value="Wallet">Wallet</Radio>
+                                                                {/* <Radio value="Wallet">Wallet</Radio> */}
                                                             </RadioGroup>
                                                         </div>
                                                         <Button
@@ -403,9 +404,10 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder, fetchOrder
                                         Confirm
                                     </Button>
                                 ) : (
-                                    <Button color="primary" onPress={() => setEditing(true)}>
-                                        Edit
-                                    </Button>
+                                    ""
+                                    // <Button color="primary" onPress={() => setEditing(true)}>
+                                    //     Edit
+                                    // </Button>
                                 )}
                             </ModalFooter>
                         </>

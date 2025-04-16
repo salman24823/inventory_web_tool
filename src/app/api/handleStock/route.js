@@ -25,6 +25,7 @@ export async function GET() {
 // POST: Create a new stock
 export async function POST(request) {
   try {
+    
     await dbConnection();
     const body = await request.json();
     console.log(body, "body");

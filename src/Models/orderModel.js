@@ -25,6 +25,7 @@ const OrderSchema = new mongoose.Schema(
     orderName: { type: String },
     quantity: { type: String },
     quality: { type: String },
+    unit: { type: String },
     totalPrice: { type: String },
     amountPaid: { type: String },
     orderStatus: { type: String },

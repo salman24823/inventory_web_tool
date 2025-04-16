@@ -10,6 +10,7 @@ const stockSchema = new mongoose.Schema(
     amountPaid: { type: Number },
     quantity: { type: Number },
     unit: { type: String },
+    costPerUnit: { type: String },
     quality: { type: String },
     issueDate: { type: Date },
     deadline: { type: Date },

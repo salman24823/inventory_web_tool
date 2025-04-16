@@ -14,7 +14,6 @@ import {
   DropdownItem,
   useDisclosure,
   Button,
-  Tabs, Tab
 } from "@heroui/react";
 import { ChevronDown, X } from "lucide-react";
 import Action from "./action";
@@ -167,7 +166,7 @@ export default function Stock() {
     }
   }
 
-  ////// gray vloth
+  ////// gray cloth
   const [selected, setSelected] = React.useState("Default");
 
   return (
@@ -251,10 +250,11 @@ export default function Stock() {
 
           <div className="flex gap-3">
 
-            <Tabs color="white" aria-label="Options" selectedKey={selected} onSelectionChange={setSelected}>
+            {/* <Tabs color="white" aria-label="Options" selectedKey={selected} onSelectionChange={setSelected}>
               <Tab key="Default" title="Default" />
               <Tab key="Gray-Cloth" title="Gray Cloth" />
-            </Tabs>
+            </Tabs> */}
+
             {
               selected === "Default" ?
                 <>
@@ -268,6 +268,7 @@ export default function Stock() {
                 </>
             }
           </div>
+
         </div>
       </div>
 
@@ -290,7 +291,7 @@ export default function Stock() {
                     <TableHeader>
                       <TableColumn>#</TableColumn>
                       <TableColumn className="min-w-36">STOCK</TableColumn>
-                      <TableColumn className="min-w-40 max-w-72">STOCK TITLE</TableColumn>
+                      <TableColumn className="min-w-40 max-w-72">STOCK QUALITY</TableColumn>
                       <TableColumn className="min-w-36">STATUS</TableColumn>
                       <TableColumn className="min-w-36">STOCK QUANTITY</TableColumn>
                       <TableColumn className="min-w-36">STOCK STATUS</TableColumn>
@@ -321,7 +322,7 @@ export default function Stock() {
 
                             <TableCell className="text-nowrap">
 
-                              <p className="text-sm text-gray-500">{Stock.stockName}</p>
+                              <p className="text-sm text-gray-500">{Stock.quality}</p>
 
                             </TableCell>
 
