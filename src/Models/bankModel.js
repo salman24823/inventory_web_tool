@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 const bankSchema = new mongoose.Schema(
   {
     totalBank: {
-      type: String,
+      type: Number,
       required: false,
     }
   },

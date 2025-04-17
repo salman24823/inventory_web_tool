@@ -5,7 +5,7 @@ const SpendingSchema = new mongoose.Schema(
     amount: { type: Number, required: true },
     description: { type: String, required: true },
     date: { type: Date, required: true },
-    method: { type: Date, required: true },
+    method: { type: String, required: true },
   },
   { timestamps: true }
 );

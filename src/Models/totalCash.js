@@ -3,12 +3,8 @@ import mongoose from "mongoose";
 // Define Schema
 const cashSchema = new mongoose.Schema(
   {
-    orderID: {
-      type: String,
-      required: false,
-    },
     totalCash: {
-      type: String,
+      type: Number,
       required: false,
     }
   },

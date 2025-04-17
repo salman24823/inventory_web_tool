@@ -305,7 +305,7 @@ export default function Action({ fetchOrders }) {
                               : "N/A"}
                           </p>
                           <p>
-                            <span className="font-semibold">Price / Unit: </span>
+                            <span className="font-semibold">Sale Price / Unit: </span>
                             {quantity && totalPrice ? (totalPrice / quantity).toFixed(2) : "N/A"}
                           </p>
                           <p>

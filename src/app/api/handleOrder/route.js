@@ -117,13 +117,16 @@ export async function POST(req) {
       $inc: { quantity: -quantityNum },
     });
 
+    const cashId = "6801100d913b8db3b5893b38";
+    const bankId = "68010fad913b8db3b5893b36";
+
     if (transactionType === "Cash") {
-      await cashModel.create({
-        totalCash: amountPaidNum,
+      await cashModel.findByIdAndUpdate(cashId, {
+        $inc: { totalCash: amountPaidNum },
       });
     } else {
-      await bankModel.create({
-        totalBank: amountPaidNum,
+      await bankModel.findByIdAndUpdate(bankId, {
+        $inc: { totalBank: amountPaidNum },
       });
     }
 
@@ -151,8 +154,8 @@ export async function DELETE(req) {
     const { order, USER } = await req.json(); // Parse request body
 
     // Hardcoded IDs for cash and bank
-    const cashId = "67fec0187fed8958f6caeaa3";
-    const bankId = "67fec2567fed8958f6caeadb";
+    const cashId = "6801100d913b8db3b5893b38";
+    const bankId = "68010fad913b8db3b5893b36";
 
     if (!order || !order._id || !order.stockId || !order.quantity || !USER) {
       return NextResponse.json(
@@ -261,8 +264,8 @@ export async function PUT(req) {
   try {
     const body = await req.json(); // Parse request body
 
-    const cashId = "67fec0187fed8958f6caeaa3";
-    const bankId = "67fec2567fed8958f6caeadb";
+    const cashId = "6801100d913b8db3b5893b38";
+    const bankId = "68010fad913b8db3b5893b36";
 
     if (!body || !body.updatedOrder) {
       return NextResponse.json(

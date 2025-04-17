@@ -119,13 +119,13 @@ const Cards = () => {
       bgColor: "bg-blue-100",
       hoverBgColor: "hover:bg-blue-200",
     },
-    {
-      title: "Total Orders",
-      value: loading ? <Spinner size="sm" /> : totalOrders ?? 0,
-      icon: <Package className="text-yellow-500 w-6 h-6" />,
-      bgColor: "bg-yellow-100",
-      hoverBgColor: "hover:bg-yellow-200",
-    },
+    // {
+    //   title: "Total Orders",
+    //   value: loading ? <Spinner size="sm" /> : totalOrders ?? 0,
+    //   icon: <Package className="text-yellow-500 w-6 h-6" />,
+    //   bgColor: "bg-yellow-100",
+    //   hoverBgColor: "hover:bg-yellow-200",
+    // },
     {
       title: "Total Pendings",
       value: loading ? <Spinner size="sm" /> : `PKR ${totalPending ?? 0}`,
@@ -156,14 +156,14 @@ const Cards = () => {
     // },
     {
       title: "Bank Amount",
-      value: loading ? <Spinner size="sm" /> : `PKR ${cashData ?? 0}`,
+      value: loading ? <Spinner size="sm" /> : `PKR ${bankData ?? 0}`,
       icon: <BanknoteIcon className="text-green-500 w-6 h-6" />,
       bgColor: "bg-blue-100",
       hoverBgColor: "hover:bg-blue-200",
     },
     {
       title: "Cash Amount",
-      value: loading ? <Spinner size="sm" /> : `PKR ${bankData ?? 0}`,
+      value: loading ? <Spinner size="sm" /> : `PKR ${cashData ?? 0}`,
       icon: <Coins className="text-green-500 w-6 h-6" />,
       bgColor: "bg-blue-100",
       hoverBgColor: "hover:bg-blue-200",
