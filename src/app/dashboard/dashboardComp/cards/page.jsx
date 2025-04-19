@@ -133,13 +133,13 @@ const Cards = () => {
       bgColor: "bg-red-100",
       hoverBgColor: "hover:bg-red-200",
     },
-    {
-      title: "Total Revenue",
-      value: loading ? <Spinner size="sm" /> : `PKR ${totalRevenue ?? 0}`,
-      icon: <Activity className="text-green-500 w-6 h-6" />,
-      bgColor: "bg-green-100",
-      hoverBgColor: "hover:bg-green-200",
-    },
+    // {
+    //   title: "Total Revenue",
+    //   value: loading ? <Spinner size="sm" /> : `PKR ${totalRevenue ?? 0}`,
+    //   icon: <Activity className="text-green-500 w-6 h-6" />,
+    //   bgColor: "bg-green-100",
+    //   hoverBgColor: "hover:bg-green-200",
+    // },
     // {
     //   title: "Net Profit",
     //   value: loading ? <Spinner size="sm" /> : `PKR ${totalRevenue ?? 0}`,
@@ -157,7 +157,7 @@ const Cards = () => {
     {
       title: "Bank Amount",
       value: loading ? <Spinner size="sm" /> : `PKR ${bankData ?? 0}`,
-      icon: <BanknoteIcon className="text-green-500 w-6 h-6" />,
+      icon: <BanknoteIcon className="text-blue-500 w-6 h-6" />,
       bgColor: "bg-blue-100",
       hoverBgColor: "hover:bg-blue-200",
     },
@@ -165,8 +165,8 @@ const Cards = () => {
       title: "Cash Amount",
       value: loading ? <Spinner size="sm" /> : `PKR ${cashData ?? 0}`,
       icon: <Coins className="text-green-500 w-6 h-6" />,
-      bgColor: "bg-blue-100",
-      hoverBgColor: "hover:bg-blue-200",
+      bgColor: "bg-green-100",
+      hoverBgColor: "hover:bg-green-200",
     },
   ];
 

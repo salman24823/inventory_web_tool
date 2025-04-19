@@ -1,5 +1,7 @@
 import dbConnection from "@/config/dbConnection";
+import bankModel from "@/Models/bankModel";
 import orderModel from "@/Models/orderModel";
+import cashModel from "@/Models/totalCash";
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
@@ -8,17 +10,14 @@ export async function POST(req) {
   try {
     const data = await req.json();
 
-    const {
-      selectedOrder,
-      updatedInstallments
-    } = data;
+    const { selectedOrder, updatedInstallments } = data;
     
     const cashId = "67fec0187fed8958f6caeaa3";    
     const bankId = "67fec2567fed8958f6caeadb";    
 
     const newInstallment = updatedInstallments[updatedInstallments.length - 1];
 
-    // Update the correct model by ID
+    // Update cash or bank total
     if (newInstallment?.transactionType === "Cash" && cashId) {
       await cashModel.findByIdAndUpdate(cashId, {
         $inc: { totalCash: newInstallment.amount }
@@ -29,10 +28,20 @@ export async function POST(req) {
       });
     }
 
-    // Update order
+    // Calculate new amountPaid as a string
+    const currentPaid = Number(selectedOrder.amountPaid || 0);
+    const additionalAmount = Number(newInstallment.amount || 0);
+    const newPaid = (currentPaid + additionalAmount).toString();
+
+    // Update order with new installments and updated amountPaid
     const updatedOrder = await orderModel.findByIdAndUpdate(
       selectedOrder._id,
-      { $set: { installments: updatedInstallments } },
+      {
+        $set: {
+          installments: updatedInstallments,
+          amountPaid: newPaid
+        }
+      },
       { new: true }
     );
 

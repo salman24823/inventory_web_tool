@@ -35,7 +35,6 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder, fetchOrder
     const [loading, setLoading] = useState(false);
 
 
-
     // Calculate pending amount
     const pendingAmount = Number(totalPrice) - Number(amountPaid);
 
@@ -191,7 +190,7 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder, fetchOrder
                                                         ) : (
                                                             <p className="text-gray-800 mt-1">{quantity} {selectedOrder.unit} </p>
                                                         )}
-                                                        
+
 
 
                                                     </div>
@@ -319,8 +318,6 @@ export default function Detail({ isOpen, onOpenChange, selectedOrder, fetchOrder
                                         </Tab>
 
                                         <Tab key="installments" title="Installments">
-
-
                                             <div className="space-y-8 mt-8">
                                                 {/* Installments History */}
                                                 <div>
