@@ -1,3 +1,4 @@
+"use client";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Modal,
@@ -10,238 +11,265 @@ import {
   Select,
   SelectItem,
   useDisclosure,
-  RadioGroup, Radio
+  RadioGroup,
+  Radio,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+  Tooltip,
 } from "@heroui/react";
 import { toast } from "react-toastify";
-import { Plus } from "lucide-react";
+import { Plus, Trash2, Edit } from "lucide-react";
 import { useSession } from "next-auth/react";
-// import { CldUploadWidget } from "next-cloudinary";
 
-export default function Action({ fetchOrders }) {
-
+export default function Action() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const dropdownRef = useRef(null);
 
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [suggestions, setSuggestions] = useState([]);
-
   const [phone, setPhone] = useState("");
-  const [stockId, setStockId] = useState(""); // Changed from quality to stockId
-  const [quantity, setQuantity] = useState("");
-  const [quality, setQuality] = useState("");
-  const [totalPrice, setTotalPrice] = useState("");
-  const [amountPaid, setAmountPaid] = useState("");
   const [issueDate, setIssueDate] = useState("");
   const [deadline, setDeadline] = useState("");
+  const [transactionType, setTransactionType] = useState("Cash");
   const [stockData, setStockData] = useState([]);
-  const [selectedStock, setSelectedStock] = useState(null);
-  const [transactionType, setTransactionType] = React.useState(null);
+  const [partyNames, setPartyName] = useState([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  // Order items state
+  const [items, setItems] = useState([]);
+  const [currentItem, setCurrentItem] = useState({
+    stockId: "",
+    quantity: "",
+    salePricePerUnit: "",
+  });
+  const [editingIndex, setEditingIndex] = useState(null);
 
   const { data: session } = useSession();
+  const USER = session?.user?.name || "Demo User";
 
-  const USER = session?.user?.name || null
+  // Sample data
+  useEffect(() => {
+    setPartyName(["Usama Party", "Ali Party", "Hamza Party", "Khalid Party"]);
+    setStockData([
+      { _id: "1", quality: "22/45 Cotton", quantity: 100, unit: "Meter", costPerUnit: "500" },
+      { _id: "2", quality: "12/55 PolyEster", quantity: 200, unit: "Meter", costPerUnit: "300" },
+      { _id: "3", quality: "45:12 Khadar", quantity: 150, unit: "Meter", costPerUnit: "250" },
+    ]);
+  }, []);
 
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  // Ref for the dropdown container
-  const dropdownRef = useRef(null);
-
-  // Dummy Data for Party Names
-  const [partyNames, setPartyName] = useState([]);
-
-  // get suggested party names from database
-  async function getSuggest() {
-    try {
-      const response = await fetch("/api/handleOrder");
-      if (!response.ok) {
-        toast.error("Failed to get Parties");
-        return;
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsDropdownOpen(false);
       }
-      const data = await response.json();
-      setPartyName(data.map((party) => party.name));
-    } catch (error) {
-      toast.error("Failed to get Parties");
-    }
-  }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-  // Handle Input Change
   const handleChange = (e) => {
     const value = e.target.value;
     setName(value);
-
-    // Filter Suggestions
-    if (value.trim() === "") {
-      setSuggestions([]); // Clear suggestions if input is empty
-    } else {
-      setSuggestions(
-        partyNames.filter((party) =>
-          party.toLowerCase().includes(value.toLowerCase())
-        )
-      );
-    }
-
-    // Open dropdown when typing
     setIsDropdownOpen(true);
+    setSuggestions(
+      partyNames.filter((party) => party.toLowerCase().includes(value.toLowerCase()))
+    );
   };
 
-  // Handle Suggestion Selection
   const handleSuggestionClick = (party) => {
-    setName(party); // Set the selected party name
-    setSuggestions([]); // Clear suggestions after selection
-    setIsDropdownOpen(false); // Close dropdown
+    setName(party);
+    setIsDropdownOpen(false);
   };
 
-  async function GETSTOCK() {
-    try {
-      const response = await fetch("/api/handleStock");
-      if (!response.ok) {
-        toast.error("Failed to get Inventory");
-        return;
-      }
-      const data = await response.json();
-      setStockData(data);
-    } catch (error) {
-      console.log("Error fetching inventory");
-    }
-  }
+  const selectedStock = currentItem.stockId 
+    ? stockData.find((s) => s._id === currentItem.stockId)
+    : null;
 
-  const handleSubmit = async (e) => {
+  const parsedQuantity = Number(currentItem.quantity);
+  const parsedSalePricePerUnit = Number(currentItem.salePricePerUnit);
+  const parsedTotalPrice = parsedQuantity * parsedSalePricePerUnit;
+  const profitPerUnit = selectedStock && parsedSalePricePerUnit
+    ? (parsedSalePricePerUnit - Number(selectedStock.costPerUnit)).toFixed(2)
+    : "N/A";
+
+  // Calculate totals
+  const totalAmount = items.reduce((sum, item) => sum + (Number(item.quantity) * Number(item.salePricePerUnit)), 0);
+  const [amountPaid, setAmountPaid] = useState("");
+  const pendingAmount = totalAmount - Number(amountPaid);
+
+  const handleAddItem = () => {
+    if (!currentItem.stockId || !currentItem.quantity || !currentItem.salePricePerUnit) {
+      toast.error("Please fill all item fields");
+      return;
+    }
+
+    if (editingIndex !== null) {
+      // Update existing item
+      const updatedItems = [...items];
+      updatedItems[editingIndex] = { ...currentItem };
+      setItems(updatedItems);
+      setEditingIndex(null);
+    } else {
+      // Add new item
+      setItems([...items, { ...currentItem }]);
+    }
+
+    // Reset current item
+    setCurrentItem({
+      stockId: "",
+      quantity: "",
+      salePricePerUnit: "",
+    });
+  };
+
+  const handleEditItem = (index) => {
+    setCurrentItem({ ...items[index] });
+    setEditingIndex(index);
+  };
+
+  const handleRemoveItem = (index) => {
+    const newItems = [...items];
+    newItems.splice(index, 1);
+    setItems(newItems);
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
-
-    const selectedStock = stockData.find((item) => item._id === stockId); // Find by _id
-
-    if (!selectedStock) {
-      toast.error("Invalid stock selection");
-      return;
-    }
-    if (quantity > selectedStock.quantity) {
-      toast.error("Quantity exceeds available stock");
-      return;
-    }
     setLoading(true);
-    try {
-      const response = await fetch("/api/handleOrder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user: USER,
-          name,
-          phone,
-          quality: selectedStock.quality, // Use selectedStock.quality
-          quantity,
-          totalPrice,
-          amountPaid,
-          issueDate,
-          deadline,
-          unit : selectedStock.unit ,
-          stockId,
-          transactionType,
-        }),
-      });
-      if (!response.ok) throw new Error("Failed to Upload");
-      toast.success("Successfully uploaded");
-      fetchOrders();
-      onOpenChange(false);
-    } catch (error) {
-      console.error(error);
-      toast.error("Error in Uploading");
-    } finally {
+
+    if (items.length === 0) {
+      toast.error("Please add at least one item");
       setLoading(false);
+      return;
     }
+
+    const order = {
+      name,
+      phone,
+      items: items.map(item => {
+        const stock = stockData.find(s => s._id === item.stockId);
+        return {
+          stockId: item.stockId,
+          stockName: stock?.quality || "",
+          quantity: Number(item.quantity),
+          salePricePerUnit: Number(item.salePricePerUnit),
+          totalPrice: Number(item.quantity) * Number(item.salePricePerUnit),
+        };
+      }),
+      totalAmount,
+      amountPaid: Number(amountPaid),
+      pendingAmount,
+      issueDate,
+      deadline,
+      transactionType,
+      createdBy: USER,
+    };
+
+    console.log("Order Submitted:", order);
+    toast.success("Order added successfully!");
+
+    // Reset form
+    setName("");
+    setPhone("");
+    setItems([]);
+    setCurrentItem({
+      stockId: "",
+      quantity: "",
+      salePricePerUnit: "",
+    });
+    setAmountPaid("");
+    setIssueDate("");
+    setDeadline("");
+    setTransactionType("Cash");
+    setLoading(false);
+    onOpenChange(false);
   };
-
-  useEffect(() => {
-
-    getSuggest()
-    GETSTOCK();
-    console.log(partyNames, "partyNames")
-
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false); // Close dropdown
-      }
-    };
-
-    // Add event listener for clicks outside
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      // Cleanup event listener
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-
-
-  }, [fetchOrders]);
 
   return (
     <>
-      <Button
-        onPress={onOpen}
-        className="bg-blue-500 text-white font-semibold text-sm"
-      >
-        Add New Order <Plus className="w-5" />
+      <Button onPress={onOpen} className="bg-blue-500 text-white font-semibold text-sm">
+        Add New Order <Plus className="w-5 ml-2" />
       </Button>
 
-      <div className="flex justify-center items-center flex-col gap-4">
-        <Modal size="5xl" isOpen={isOpen} onOpenChange={onOpenChange}>
-          <ModalContent>
-            {(onClose) => (
-              <>
-                <ModalHeader>New Order</ModalHeader>
-                <ModalBody>
-                  <form onSubmit={handleSubmit} className="space-y-4 ">
-
-                    <div className="grid grid-cols-2 gap-5">
-
-                      <div className="space-y-4">
-
-                        <div className="relative" ref={dropdownRef}>
-                          {/* Input Field */}
-                          <Input
-                            label="Party Name"
-                            value={name}
-                            onChange={handleChange}
-                            onFocus={() => setIsDropdownOpen(true)} // Open dropdown on focus
-                            required
-                          />
-
-                          {/* Suggestions Dropdown */}
-                          {isDropdownOpen && suggestions.length > 0 && (
-                            <ul
-                              className={`absolute z-50 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg transition-opacity duration-300 ease-in-out`}
-                            >
-                              {suggestions.map((party, index) => (
-                                <li
-                                  key={index}
-                                  onClick={() => handleSuggestionClick(party)}
-                                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer transition-colors duration-200 ease-in-out"
-                                >
-                                  {party}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-
+      <Modal size="5xl" isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <div className="overflow-y-scroll h-[90vh]">
+              <ModalHeader>New Order</ModalHeader>
+              <ModalBody>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-5">
+                    <div className="space-y-4">
+                      <div className="relative" ref={dropdownRef}>
                         <Input
-                          label="Phone"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
+                          label="Party Name"
+                          value={name}
+                          onChange={handleChange}
+                          onFocus={() => setIsDropdownOpen(true)}
                           required
                         />
+                        {isDropdownOpen && suggestions.length > 0 && (
+                          <ul className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-md shadow-lg">
+                            {suggestions.map((party, index) => (
+                              <li
+                                key={index}
+                                onClick={() => handleSuggestionClick(party)}
+                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                              >
+                                {party}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
 
+                      <Input
+                        label="Phone"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        required
+                      />
+
+                      <Input
+                        label="Issue Date"
+                        type="date"
+                        value={issueDate}
+                        onChange={(e) => setIssueDate(e.target.value)}
+                        required
+                      />
+
+                      <Input
+                        label="Deadline"
+                        type="date"
+                        value={deadline}
+                        onChange={(e) => setDeadline(e.target.value)}
+                      />
+
+                      <RadioGroup
+                        orientation="horizontal"
+                        value={transactionType}
+                        onValueChange={setTransactionType}
+                        label="Transaction Type"
+                      >
+                        <Radio value="Cash">Cash</Radio>
+                        <Radio value="Bank">Bank</Radio>
+                      </RadioGroup>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="border p-4 rounded-lg">
+                        <h3 className="font-semibold mb-3">Add Items</h3>
+                        
                         <Select
-                          label={stockId ? `Selected: ${selectedStock?.quality || "N/A"}` : "Select Stock"}
-                          value={stockId}
-                          onChange={(e) => {
-                            const selectedId = e.target.value;
-                            setStockId(selectedId); // Update stockId
-                            const stock = stockData.find((s) => s._id === selectedId);
-                            setSelectedStock(stock || null); // Update selectedStock
-                          }}
-                          placeholder="Select a Stock"
-                          className="text-black"
-                          items={stockData}
-                          required
+                          label={currentItem.stockId ? `Selected: ${selectedStock?.quality}` : "Select Stock"}
+                          value={currentItem.stockId}
+                          onChange={(e) => setCurrentItem({...currentItem, stockId: e.target.value})}
                         >
                           {stockData.map((stock) => (
                             <SelectItem key={stock._id} value={stock._id}>
@@ -250,128 +278,147 @@ export default function Action({ fetchOrders }) {
                           ))}
                         </Select>
 
-                        <div>
+                        <div className="grid grid-cols-2 gap-3 mt-3">
                           <Input
                             label="Quantity"
                             type="number"
-                            value={quantity}
-                            onChange={(e) => setQuantity(e.target.value)}
-                            required
+                            value={currentItem.quantity}
+                            min={1}
+                            onChange={(e) => setCurrentItem({...currentItem, quantity: e.target.value})}
+                          />
+
+                          <Input
+                            label="Sale Price / Unit"
+                            type="number"
+                            value={currentItem.salePricePerUnit}
+                            onChange={(e) => setCurrentItem({...currentItem, salePricePerUnit: e.target.value})}
                           />
                         </div>
 
-                        <div className="flex bg-gray-100 border border-gray-200  py-4 rounded-lg justify-between px-5">
-                          <p className="flex gap-3">
-                            Available:{" "}
-                            {
-                              selectedStock ? <p className="flex gap-2"> {selectedStock.quantity} {selectedStock.unit} </p> : "N/A"
-                            }
-                          </p>
-                          <p>
-                            Remaining:{" "}
-                            {(() => {
-                              const selectedStock = stockData.find((s) => s._id === stockId);
-                              if (!selectedStock) return "N/A";
+                        {selectedStock && (
+                          <div className={`mt-3 border border-gray-200 py-4 rounded-lg px-5 ${
+                            currentItem.quantity && currentItem.salePricePerUnit
+                              ? profitPerUnit > 0
+                                ? "bg-green-200"
+                                : "bg-red-200"
+                              : "bg-gray-100"
+                          }`}>
+                            <div className="grid grid-cols-2">
+                              {/* <p>
+                                <span className="font-semibold">Cost / Unit: </span>
+                                {selectedStock.costPerUnit}
+                              </p> */}
+                              <p>
+                                <span className="font-semibold">Profit / Unit: </span>
+                                {profitPerUnit}
+                              </p>
+                            </div>
+                            <p className="mt-2">
+                              <span className="font-semibold">Available: </span>
+                              {selectedStock.quantity} {selectedStock.unit}
+                            </p>
+                            {currentItem.quantity && (
+                              <p className="mt-1">
+                                <span className="font-semibold">Remaining: </span>
+                                {selectedStock.quantity - Number(currentItem.quantity)} {selectedStock.unit}
+                              </p>
+                            )}
+                          </div>
+                        )}
 
-                              const remaining = selectedStock.quantity - Number(quantity);
-                              return isNaN(remaining) ? <p className="flex gap-1"> {selectedStock.quantity} {selectedStock.unit} </p> : remaining;
-                            })()}
-                          </p>
-                        </div>
-
+                        <Button 
+                          className="mt-3 w-full" 
+                          color="primary" 
+                          onPress={handleAddItem}
+                          disabled={!currentItem.stockId || !currentItem.quantity || !currentItem.salePricePerUnit}
+                        >
+                          {editingIndex !== null ? "Update Item" : "Add Item"}
+                        </Button>
                       </div>
 
-                      <div className="space-y-4">
-
+                      <div className="border p-4 rounded-lg">
+                        <h3 className="font-semibold mb-3">Payment Details</h3>
+                        
                         <Input
-                          label="Total Price"
-                          value={totalPrice}
-                          onChange={(e) => setTotalPrice(e.target.value)}
-                          required
-                        />
-
-                        <div
-                          className={`grid grid-cols-2 border border-gray-200 py-4 rounded-lg px-5 ${selectedStock && selectedStock.costPerUnit && quantity && totalPrice
-                              ? (totalPrice / quantity - parseFloat(selectedStock.costPerUnit)) > 0
-                                ? "bg-green-200" // Profit
-                                : "bg-red-200" // Loss
-                              : "bg-gray-100" // Default
-                            }`}
-                        >
-                          <p onClick={() => console.log(selectedStock, "selected stock")}>
-                            <span className="font-semibold">Cost / Unit: </span>
-                            {selectedStock?.costPerUnit
-                              ? parseFloat(selectedStock.costPerUnit).toFixed(2)
-                              : "N/A"}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Sale Price / Unit: </span>
-                            {quantity && totalPrice ? (totalPrice / quantity).toFixed(2) : "N/A"}
-                          </p>
-                          <p>
-                            <span className="font-semibold">Profit / Unit: </span>
-                            {selectedStock?.costPerUnit && quantity && totalPrice
-                              ? ((totalPrice / quantity) - parseFloat(selectedStock.costPerUnit)).toFixed(2)
-                              : "N/A"}
-                          </p>
-                        </div>
-
-
-                        <Input
-                          label="Amount Paid"
+                          label="Amount Received"
+                          type="number"
                           value={amountPaid}
                           onChange={(e) => setAmountPaid(e.target.value)}
                           required
                         />
 
-                        <Input
-                          label="Issue Date"
-                          type="date"
-                          value={issueDate}
-                          onChange={(e) => setIssueDate(e.target.value)}
-                          required
-                        />
-
-                        <Input
-                          label="Deadline"
-                          type="date"
-                          value={deadline}
-                          onChange={(e) => setDeadline(e.target.value)}
-                        />
-
-                        <div>
-                          <RadioGroup orientation="horizontal"
-                            value={transactionType}
-                            onValueChange={setTransactionType}
-                            label="Transaction Type">
-                            <Radio value="Cash">Cash</Radio>
-                            <Radio value="Bank">Bank</Radio>
-                            {/* <Radio value="Wallet">Wallet</Radio> */}
-                          </RadioGroup>
+                        <div className="flex justify-between border border-gray-200 py-4 rounded-lg px-5 bg-gray-100 mt-3">
+                          <div>
+                            <p className="font-semibold">Pending:</p>
+                            <p>{!isNaN(pendingAmount) ? pendingAmount.toFixed(2) : "0.00"}</p>
+                          </div>
+                          <div>
+                            <p className="font-semibold">Total:</p>
+                            <p>{totalAmount.toFixed(2) || "0.00"}</p>
+                          </div>
                         </div>
-
                       </div>
-
                     </div>
+                  </div>
 
-                    <ModalFooter>
-                      <Button color="danger" variant="light" onPress={onClose}>
-                        Close
-                      </Button>
-                      <Button color="primary" type="submit" disabled={loading}>
-                        {loading ? "Adding..." : "Add"}
-                      </Button>
-                    </ModalFooter>
+                  {/* Items Table */}
+                  {items.length > 0 && (
+                    <div className="border rounded-lg overflow-hidden">
+                      <Table aria-label="Order items table">
+                        <TableHeader>
+                          <TableColumn>STOCK</TableColumn>
+                          <TableColumn>QUANTITY</TableColumn>
+                          <TableColumn>PRICE/UNIT</TableColumn>
+                          <TableColumn>TOTAL</TableColumn>
+                          <TableColumn>ACTIONS</TableColumn>
+                        </TableHeader>
+                        <TableBody>
+                          {items.map((item, index) => {
+                            const stock = stockData.find(s => s._id === item.stockId);
+                            const itemTotal = Number(item.quantity) * Number(item.salePricePerUnit);
+                            
+                            return (
+                              <TableRow key={index}>
+                                <TableCell>{stock?.quality || "N/A"}</TableCell>
+                                <TableCell>{item.quantity} {stock?.unit}</TableCell>
+                                <TableCell>{item.salePricePerUnit}</TableCell>
+                                <TableCell>{itemTotal.toFixed(2)}</TableCell>
+                                <TableCell>
+                                  <div className="flex gap-2">
+                                    <Tooltip content="Edit">
+                                      <Button isIconOnly size="sm" variant="light" onPress={() => handleEditItem(index)}>
+                                        <Edit className="w-4 h-4" />
+                                      </Button>
+                                    </Tooltip>
+                                    <Tooltip content="Remove">
+                                      <Button isIconOnly size="sm" variant="light" color="danger" onPress={() => handleRemoveItem(index)}>
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </Tooltip>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
 
-                  </form>
-
-                </ModalBody>
-              </>
-            )}
-          </ModalContent>
-        </Modal>
-      </div>
+                  <ModalFooter>
+                    <Button color="danger" variant="light" onPress={onClose}>
+                      Close
+                    </Button>
+                    <Button color="primary" type="submit" disabled={loading || items.length === 0}>
+                      {loading ? "Processing..." : "Create Order"}
+                    </Button>
+                  </ModalFooter>
+                </form>
+              </ModalBody>
+            </div>
+          )}
+        </ModalContent>
+      </Modal>
     </>
-
   );
 }

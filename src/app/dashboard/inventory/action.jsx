@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import {
   Modal,
@@ -12,88 +14,97 @@ import {
   DropdownMenu,
   DropdownItem,
   useDisclosure,
+  Select,
+  SelectItem,
 } from "@heroui/react";
-import { toast } from "react-toastify"; // Assuming you're using react-hot-toast for notifications
-import { CldUploadWidget } from "next-cloudinary";
 import { Plus } from "lucide-react";
+import { toast } from "react-toastify";
 
-export default function Action({ fetchStocks }) {
-  const [modalPlacement, setModalPlacement] = useState("bottom");
-  const [loading, setLoading] = useState(false);
-  const [companyName, setCompanyName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [stockName, setStockName] = useState("");
-  const [totalPrice, setTotalPrice] = useState("");
-  const [amountPaid, setAmountPaid] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [unit, setUnit] = useState(""); // New state for selected unit
-  const [quality, setQuality] = useState(""); // New state for selected unit
-  const [issueDate, setIssueDate] = useState("");
-  const [deadline, setDeadline] = useState("");
-  const [stockImage, setStockImage] = useState("");
-  const [companyLogo, setCompanyLogo] = useState(""); // State for company logo
-
+export default function Action() {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  const handleSubmit = async (e) => {
+  // Main stock fields
+  const [factory, setFactory] = useState("");
+  const [purchaseOrder, setPurchaseOrder] = useState("");
+  const [unitType, setUnitType] = useState("");
+  const [qualityType, setQualityType] = useState("");
+  const [totalQuantity, setTotalQuantity] = useState("");
+  const [scratchQty, setScratchQty] = useState("");
+  const [costPerUnit, setCostPerUnit] = useState("");
+  const [payPerUnit, setPayPerUnit] = useState("");
+  const [paidAmount, setPaidAmount] = useState("");
+  const [issueDate, setIssueDate] = useState("");
+  const [deadline, setDeadline] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Miscellaneous Charges
+  const [miscCharges, setMiscCharges] = useState([]);
+  const [miscDesc, setMiscDesc] = useState("");
+  const [miscCostPerUnit, setMiscCostPerUnit] = useState("");
+  const [transportExpanses, setTransportExpanses] = useState("");
+
+
+  const factories = [
+    "Faisalabad Grey Mills",
+    "Punjab Textiles",
+    "Al-Noor Weaving Factory",
+    "Karachi WeaveTech",
+    "Lahore GreyCloth Co.",
+  ];
+
+  const purchaseOrders = ["PO 1", "PO 2", "PO 3", "PO 4", "PO 5"];
+
+  const netCost = Number(totalQuantity || 0) * Number(costPerUnit || 0);
+  const miscTotal = miscCharges.reduce(
+    (sum, e) => sum + Number(e.totalCost || 0),
+    0
+  );
+  const overallCost = netCost + miscTotal;
+  const pendingPayment = overallCost - Number(paidAmount || 0);
+
+  const addMiscCharge = () => {
+    if (!miscDesc || !miscCostPerUnit || !totalQuantity) return;
+
+    const costPerU = Number(miscCostPerUnit);
+    const qty = Number(totalQuantity);
+    setMiscCharges((prev) => [
+      ...prev,
+      {
+        desc: miscDesc,
+        costPerUnit: costPerU,
+        totalCost: costPerU * qty,
+      },
+    ]);
+    setMiscDesc("");
+    setMiscCostPerUnit("");
+  };
+
+  const handleSubmit = (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const parsedTotal = parseFloat(totalPrice);
-    const parsedQuantity = parseFloat(quantity);
-    const parsedAmountPaid = parseFloat(amountPaid);
+    const stockData = {
+      factory,
+      purchaseOrder,
+      unitType,
+      qualityType,
+      totalQuantity,
+      scratchQty,
+      costPerUnit,
+      payPerUnit,
+      transportExpanses, // <- add this
+      paidAmount,
+      pendingPayment,
+      issueDate,
+      deadline,
+      miscCharges,
+    };
 
-    const costPerUnit = parsedQuantity > 0 ? (parsedTotal / parsedQuantity).toFixed(2) : "0.00";
 
-    try {
-      const response = await fetch("/api/handleStock", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          companyName,
-          phone,
-          stockName,
-          totalPrice: parsedTotal,
-          amountPaid: parsedAmountPaid,
-          quantity: parsedQuantity,
-          unit,
-          quality,
-          issueDate,
-          costPerUnit, // as string "123.45"
-          deadline,
-          stockImage,
-          companyLogo,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to Upload");
-      }
-
-      toast.success("Successfully uploaded");
-      fetchStocks();
-      setCompanyName("");
-      setPhone("");
-      setStockName("");
-      setTotalPrice("");
-      setAmountPaid("");
-      setQuantity("");
-      setUnit("");
-      setQuality("");
-      setIssueDate("");
-      setDeadline("");
-      setStockImage("");
-      setCompanyLogo("");
-
-      onOpenChange(false);
-    } catch (error) {
-      console.error(error);
-      toast.error("Error in Uploading");
-    } finally {
-      setLoading(false);
-    }
+    console.log("Stock Record Submitted:", stockData);
+    toast.success("Stock entry added successfully!");
+    setLoading(false);
   };
-
 
   return (
     <>
@@ -101,248 +112,190 @@ export default function Action({ fetchStocks }) {
         onPress={onOpen}
         className="bg-blue-500 text-white font-semibold text-sm"
       >
-        Add New Stock <Plus className="w-5" />
+        Add New Stock <Plus className="w-5 ml-1" />
       </Button>
-      <div className="flex justify-center items-center flex-col gap-4">
-        <div className="overflow-y-scroll">
-          <Modal
-            className="h-[85vh]"
-            isOpen={isOpen}
-            placement={modalPlacement}
-            onOpenChange={onOpenChange}
-          >
-            <ModalContent className="overflow-y-scroll">
-              {(onClose) => (
-                <>
-                  <ModalHeader className="flex flex-col gap-1">
-                    Add New Stock
-                  </ModalHeader>
-                  <ModalBody>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                      <Input
-                        className="border border-gray-300 rounded-xl"
-                        label="Company Name"
-                        type="text"
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        required
-                      />
 
-                      <Input
-                        className="border border-gray-300 rounded-xl"
-                        label="Phone"
-                        type="text"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        required
-                      />
+      <Modal
+        isOpen={isOpen}
+        placement="bottom"
+        onOpenChange={onOpenChange}
+        className="h-[85vh]"
+      >
+        <ModalContent className="overflow-y-scroll">
+          {(onClose) => (
+            <>
+              <ModalHeader>Add New Stock Entry</ModalHeader>
+              <ModalBody>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Factory */}
+                  <Select
+                    label="Factory"
+                    placeholder="Choose a factory"
+                    selectedKeys={[factory]}
+                    onSelectionChange={(key) => setFactory(key.currentKey)}
+                  >
+                    {factories.map((name) => (
+                      <SelectItem key={name} value={name}>
+                        {name}
+                      </SelectItem>
+                    ))}
+                  </Select>
 
-                      <Input
-                        className="border border-gray-300 rounded-xl"
-                        label="Quality"
-                        type="text"
-                        value={quality}
-                        onChange={(e) => setQuality(e.target.value)}
-                        required
-                      />
+                  {/* PO */}
+                  <Select
+                    label="Purchase Order"
+                    placeholder="Choose PO"
+                    selectedKeys={[purchaseOrder]}
+                    onSelectionChange={(key) =>
+                      setPurchaseOrder(key.currentKey)
+                    }
+                  >
+                    {purchaseOrders.map((po) => (
+                      <SelectItem key={po} value={po}>
+                        {po}
+                      </SelectItem>
+                    ))}
+                  </Select>
 
-                      {/* 
-                      <Input
-                        className="border border-gray-300 rounded-xl"
-                        label="Stock Name"
-                        type="text"
-                        value={stockName}
-                        onChange={(e) => setStockName(e.target.value)}
-                        required
-                      /> */}
+                  {/* Unit Type */}
+                  <Dropdown>
+                    <DropdownTrigger>
+                      <Button className="w-full" variant="bordered">
+                        {unitType || "Select Unit Type"}
+                      </Button>
+                    </DropdownTrigger>
+                    <DropdownMenu>
+                      {["Meter", "Yard", "Kg", "Pcs"].map((u) => (
+                        <DropdownItem key={u} onPress={() => setUnitType(u)}>
+                          {u}
+                        </DropdownItem>
+                      ))}
+                    </DropdownMenu>
+                  </Dropdown>
 
-                      <Input
-                        className="border border-gray-300 rounded-xl"
-                        label="Total Price"
-                        type="text"
-                        value={totalPrice}
-                        onChange={(e) => setTotalPrice(e.target.value)}
-                        required
-                      />
+                  <Input
+                    label="Cloth Quality"
+                    value={qualityType}
+                    onChange={(e) => setQualityType(e.target.value)}
+                    required
+                  />
+                  <Input
+                    label="Gray Cloth Quantity"
+                    value={totalQuantity}
+                    onChange={(e) => setTotalQuantity(e.target.value)}
+                    required
+                  />
+                  <Input
+                    label="Scratch Quantity"
+                    value={scratchQty}
+                    onChange={(e) => setScratchQty(e.target.value)}
+                    required
+                  />
+                  <Input
+                    label="Base Cost Per Unit"
+                    value={costPerUnit}
+                    onChange={(e) => setCostPerUnit(e.target.value)}
+                    required
+                  />
+                  <Input
+                    label="Factory Payment Per Unit"
+                    value={payPerUnit}
+                    onChange={(e) => setPayPerUnit(e.target.value)}
+                    required
+                  />
 
-                      <Input
-                        className="border border-gray-300 rounded-xl"
-                        label="Amount Paid"
-                        type="text"
-                        value={amountPaid}
-                        onChange={(e) => setAmountPaid(e.target.value)}
-                        required
-                      />
+                  <Input
+                    label="Total Transport Expanses"
+                    value={transportExpanses}
+                    onChange={(e) => setTransportExpanses(e.target.value)}
+                    required
+                  />
 
-                      <Input
-                        className="border border-gray-300 rounded-xl"
-                        label="Stock Quantity"
-                        type="number"
-                        value={quantity}
-                        onChange={(e) => setQuantity(e.target.value)}
-                        required
-                      />
 
-                      <Dropdown>
-                        <DropdownTrigger>
-                          <Button className="w-full" variant="bordered">
-                            {unit || "Select Unit"}{" "}
-                            {/* Display selected unit or placeholder */}
-                          </Button>
-                        </DropdownTrigger>
-                        <DropdownMenu aria-label="Dynamic Actions">
-                          <DropdownItem
-                            key="meter"
-                            onPress={() => setUnit("Meter")}
-                          >
-                            Meter
-                          </DropdownItem>
-                          <DropdownItem
-                            key="yard"
-                            onPress={() => setUnit("Yard")}
-                          >
-                            Yard
-                          </DropdownItem>
-                          <DropdownItem key="kg" onPress={() => setUnit("kg")}>
-                            Kg
-                          </DropdownItem>
-                        </DropdownMenu>
-                      </Dropdown>
-
-                      {/* <Dropdown>
-                        <DropdownTrigger>
-                          <Button className="w-full" variant="bordered">
-                            {quality || "Select Quality"}
-                          </Button>
-                        </DropdownTrigger>
-                        <DropdownMenu aria-label="Dynamic Actions">
-                          <DropdownItem
-                            key="cotton100"
-                            onPress={() => setQuality("cotton100")}
-                          >
-                            100% Pure Cotton
-                          </DropdownItem>
-                          <DropdownItem
-                            key="polyester100"
-                            onPress={() => setQuality("polyester100")}
-                          >
-                            100% Pure PolyEster
-                          </DropdownItem>
-                          <DropdownItem
-                            key="mixed"
-                            onPress={() => setQuality("mixed")}
-                          >
-                            Mixed
-                          </DropdownItem>
-                        </DropdownMenu>
-                      </Dropdown> */}
-
-                      <Input
-                        className="border border-gray-300 rounded-xl"
-                        label="Issue Date"
-                        type="date"
-                        value={issueDate}
-                        onChange={(e) => setIssueDate(e.target.value)}
-                        required
-                      />
-
-                      <Input
-                        className="border border-gray-300 rounded-xl"
-                        label="Deadline"
-                        type="date"
-                        value={deadline}
-                        onChange={(e) => setDeadline(e.target.value)}
-                      />
-
-                      <div className="flex flex-col gap-5">
-                        <div className="flex gap-5">
-                          <div className="flex gap-5">
-                            {stockImage ? (
-                              <>
-                                <img
-                                  src={stockImage}
-                                  className="w-28"
-                                  alt="Stock Image"
-                                />
-                              </>
-                            ) : null}
-                            {companyLogo ? (
-                              <>
-                                <img
-                                  src={companyLogo}
-                                  className="w-28"
-                                  alt="Company Logo"
-                                />
-                              </>
-                            ) : null}
-                          </div>
-                        </div>
-
-                        <div className="flex gap-5">
-                          <CldUploadWidget
-                            uploadPreset="ml_default"
-                            options={{ sources: ["local", "url"] }}
-                            onSuccess={(result) =>
-                              setStockImage(result.info.secure_url)
-                            }
-                          >
-                            {({ open }) => (
-                              <Button
-                                variant="bordered"
-                                className="w-full"
-                                onPress={() => open()} // Use onPress for Button
-                              >
-                                Upload Stock Image
-                              </Button>
-                            )}
-                          </CldUploadWidget>
-                        </div>
-
-                        <div className="flex gap-5">
-                          <CldUploadWidget
-                            uploadPreset="ml_default"
-                            options={{ sources: ["local", "url"] }}
-                            onSuccess={(result) =>
-                              setCompanyLogo(result.info.secure_url)
-                            }
-                          >
-                            {({ open }) => (
-                              <Button
-                                variant="bordered"
-                                className="w-full"
-                                onPress={() => open()} // Use onPress for Button
-                              >
-                                Upload Company Logo
-                              </Button>
-                            )}
-                          </CldUploadWidget>
-                        </div>
+                  {/* Miscellaneous Section */}
+                  <div className="border p-4 rounded-md bg-gray-50 space-y-2">
+                    <p className="font-semibold text-sm">
+                      Miscellaneous Charges (per unit)
+                    </p>
+                    {miscCharges.map((item, index) => (
+                      <div
+                        key={index}
+                        className="text-sm flex justify-between text-gray-700"
+                      >
+                        <span>{item.desc}</span>
+                        <span>Rs. {item.costPerUnit} x Qty = {item.totalCost}</span>
                       </div>
+                    ))}
+                    <div className="flex flex-col gap-2 mt-2">
+                      <Input
+                        placeholder="Description"
+                        value={miscDesc}
+                        onChange={(e) => setMiscDesc(e.target.value)}
+                      />
+                      <Input
+                        placeholder="Cost Per Unit"
+                        type="number"
+                        value={miscCostPerUnit}
+                        onChange={(e) => setMiscCostPerUnit(e.target.value)}
+                      />
+                      <Button size="sm" onPress={addMiscCharge}>
+                        Add Misc Charge
+                      </Button>
+                    </div>
+                  </div>
 
-                      <ModalFooter className="px-0">
-                        <Button
-                          color="danger"
-                          variant="light"
-                          onPress={onClose}
-                        >
-                          Close
-                        </Button>
-                        <Button
-                          color="primary"
-                          type="submit"
-                          disabled={loading}
-                        >
-                          {loading ? "Adding..." : "Add"}
-                        </Button>
-                      </ModalFooter>
-                    </form>
-                  </ModalBody>
-                </>
-              )}
-            </ModalContent>
-          </Modal>
-        </div>
-      </div>
+                  <Input
+                    label="Amount Paid"
+                    value={paidAmount}
+                    onChange={(e) => setPaidAmount(e.target.value)}
+                    required
+                  />
+
+                  {/* Totals */}
+                  <div className="bg-gray-100 p-3 rounded-md space-y-1 text-sm border">
+                    <p>
+                      Net Base Cost:{" "}
+                      <strong>Rs. {netCost.toFixed(2)}</strong>
+                    </p>
+                    <p>
+                      Total Miscellaneous:{" "}
+                      <strong>Rs. {miscTotal.toFixed(2)}</strong>
+                    </p>
+                    <p>
+                      Total Pending:{" "}
+                      <strong>Rs. {pendingPayment.toFixed(2)}</strong>
+                    </p>
+                  </div>
+
+                  {/* Dates */}
+                  <Input
+                    label="Issue Date"
+                    type="date"
+                    value={issueDate}
+                    onChange={(e) => setIssueDate(e.target.value)}
+                    required
+                  />
+                  <Input
+                    label="Deadline"
+                    type="date"
+                    value={deadline}
+                    onChange={(e) => setDeadline(e.target.value)}
+                  />
+
+                  <ModalFooter className="px-0">
+                    <Button variant="light" onPress={onClose}>
+                      Close
+                    </Button>
+                    <Button type="submit" color="primary" disabled={loading}>
+                      {loading ? "Adding..." : "Add Stock"}
+                    </Button>
+                  </ModalFooter>
+                </form>
+              </ModalBody>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </>
   );
 }

@@ -17,6 +17,111 @@ import {
 } from "@heroui/react";
 import { ChevronDown, X } from "lucide-react";
 
+// Dummy data
+const dummyOrders = [
+  {
+    name: "Ayesha Khan",
+    phone: "03011234567",
+    userImage: "https://i.pravatar.cc/150?img=1",
+    totalPrice: "10000",
+    amountPaid: "5000",
+    issueDate: "2025-04-15",
+    deadline: "2025-05-01",
+    status: "Partially Paid"
+  },
+  {
+    name: "Bilal Ahmed",
+    phone: "03087654321",
+    userImage: "https://i.pravatar.cc/150?img=2",
+    totalPrice: "25000",
+    amountPaid: "25000",
+    issueDate: "2025-03-05",
+    deadline: "2025-03-25",
+    status: "Paid"
+  },
+  {
+    name: "Sarah Malik",
+    phone: "03123456789",
+    userImage: "https://i.pravatar.cc/150?img=3",
+    totalPrice: "18000",
+    amountPaid: "12000",
+    issueDate: "2025-02-10",
+    deadline: "2025-03-10",
+    status: "Partially Paid"
+  },
+  {
+    name: "Faisal Raza",
+    phone: "03345678901",
+    userImage: "https://i.pravatar.cc/150?img=4",
+    totalPrice: "35000",
+    amountPaid: "35000",
+    issueDate: "2025-01-20",
+    deadline: "2025-02-15",
+    status: "Paid"
+  },
+  {
+    name: "Mariam Shah",
+    phone: "03211223344",
+    userImage: "https://i.pravatar.cc/150?img=5",
+    totalPrice: "50000",
+    amountPaid: "0",
+    issueDate: "2025-04-01",
+    deadline: "2025-04-25",
+    status: "Pending"
+  },
+  {
+    name: "Omer Javed",
+    phone: "03092223344",
+    userImage: "https://i.pravatar.cc/150?img=6",
+    totalPrice: "80000",
+    amountPaid: "50000",
+    issueDate: "2025-03-18",
+    deadline: "2025-04-05",
+    status: "Partially Paid"
+  },
+  {
+    name: "Zara Iqbal",
+    phone: "03112223345",
+    userImage: "https://i.pravatar.cc/150?img=7",
+    totalPrice: "65000",
+    amountPaid: "65000",
+    issueDate: "2025-02-25",
+    deadline: "2025-03-15",
+    status: "Paid"
+  },
+  {
+    name: "Hassan Nawaz",
+    phone: "03055555555",
+    userImage: "https://i.pravatar.cc/150?img=8",
+    totalPrice: "90000",
+    amountPaid: "60000",
+    issueDate: "2025-01-12",
+    deadline: "2025-02-01",
+    status: "Partially Paid"
+  },
+  {
+    name: "Saira Tariq",
+    phone: "03225554433",
+    userImage: "https://i.pravatar.cc/150?img=9",
+    totalPrice: "120000",
+    amountPaid: "120000",
+    issueDate: "2025-04-10",
+    deadline: "2025-05-01",
+    status: "Paid"
+  },
+  {
+    name: "Usman Ahmed",
+    phone: "03324445556",
+    userImage: "https://i.pravatar.cc/150?img=10",
+    totalPrice: "150000",
+    amountPaid: "0",
+    issueDate: "2025-03-02",
+    deadline: "2025-03-25",
+    status: "Pending"
+  }
+];
+
+
 const processCustomersData = (orders) => {
   const customersMap = new Map();
 
@@ -30,6 +135,7 @@ const processCustomersData = (orders) => {
         totalPrice: 0,
         totalPending: 0,
         lastCheckout: order.issueDate,
+        deadline: order.deadline,
       });
     }
 
@@ -39,7 +145,6 @@ const processCustomersData = (orders) => {
     customer.totalPending +=
       parseFloat(order.totalPrice) - parseFloat(order.amountPaid);
 
-    // Update last checkout date
     if (new Date(order.issueDate) > new Date(customer.lastCheckout)) {
       customer.lastCheckout = order.issueDate;
     }
@@ -53,7 +158,7 @@ export default function Customers() {
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [selectedMonth, setSelectedMonth] = useState("Select Month");
   const [selectedYear, setSelectedYear] = useState("Select Year");
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   const months = [
     "January",
@@ -77,29 +182,31 @@ export default function Customers() {
     "2028",
     "2029",
     "2030",
-    "2031",
-    "2032",
-    "2033",
-    "2034",
-    "2035",
   ];
 
+  useEffect(() => {
+    const processed = processCustomersData(dummyOrders);
+    setCustomers(processed);
+    setIsLoading(false);
+  }, []);
+
+  const clearFilters = () => {
+    setSelectedFilter("All");
+    setSelectedMonth("Select Month");
+    setSelectedYear("Select Year");
+  };
+
   const filteredCustomers = customers.filter((customer) => {
-    // Determine payment status based on totalPending
-    const paymentStatus =
+    const status =
       customer.totalPending === 0
         ? "paid"
-        : customer.totalPending !== 0
-        ? "pending"
-        : new Date() == new Date(customer.lastCheckout)
+        : new Date() > new Date(customer.deadline)
         ? "overdue"
-        : null;
+        : "pending";
 
     const matchesFilter =
-      selectedFilter === "All" ||
-      paymentStatus === selectedFilter.toLowerCase();
+      selectedFilter === "All" || selectedFilter.toLowerCase() === status;
 
-    // Extract month and year from lastCheckout
     const checkoutDate = new Date(customer.lastCheckout);
     const checkoutMonth = checkoutDate.toLocaleString("en-US", {
       month: "long",
@@ -115,31 +222,6 @@ export default function Customers() {
     return matchesFilter && matchesMonth && matchesYear;
   });
 
-  // Clear all filters
-  const clearFilters = () => {
-    setSelectedFilter("All");
-    setSelectedMonth("Select Month");
-    setSelectedYear("Select Year");
-  };
-
-  const fetchOrders = async () => {
-    try {
-      const response = await fetch("/api/handleOrder");
-      if (!response.ok) throw new Error("Failed to fetch");
-      const data = await response.json();
-
-      const processedCustomers = processCustomersData(data);
-      setCustomers(processedCustomers);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
   return (
     <section className="w-full flex flex-col gap-4">
       <div className="shadow-small payment-filter flex flex-col gap-3 w-full p-4 bg-white">
@@ -151,10 +233,7 @@ export default function Customers() {
             {/* Filter by Status */}
             <Dropdown placement="bottom-start">
               <DropdownTrigger>
-                <Button
-                  variant="bordered"
-                  className="w-40 flex justify-between"
-                >
+                <Button variant="bordered" className="w-40 flex justify-between">
                   {selectedFilter}
                   <ChevronDown className="text-gray-500" />
                 </Button>
@@ -175,10 +254,7 @@ export default function Customers() {
             {/* Filter by Month */}
             <Dropdown placement="bottom-start">
               <DropdownTrigger>
-                <Button
-                  variant="bordered"
-                  className="w-40 flex justify-between"
-                >
+                <Button variant="bordered" className="w-40 flex justify-between">
                   {selectedMonth}
                   <ChevronDown className="text-gray-500" />
                 </Button>
@@ -199,10 +275,7 @@ export default function Customers() {
             {/* Filter by Year */}
             <Dropdown placement="bottom-start">
               <DropdownTrigger>
-                <Button
-                  variant="bordered"
-                  className="w-40 flex justify-between"
-                >
+                <Button variant="bordered" className="w-40 flex justify-between">
                   {selectedYear}
                   <ChevronDown className="text-gray-500" />
                 </Button>
@@ -220,7 +293,7 @@ export default function Customers() {
               </DropdownMenu>
             </Dropdown>
 
-            {/* Clear Filters Button */}
+            {/* Clear Filters */}
             <Button
               variant="ghost"
               className="flex items-center gap-2"
@@ -255,7 +328,6 @@ export default function Customers() {
                 className="hover:bg-gray-100 transition-colors"
               >
                 <TableCell>{index + 1}</TableCell>
-
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <img
@@ -269,13 +341,11 @@ export default function Customers() {
                     </div>
                   </div>
                 </TableCell>
-
                 <TableCell>
                   <p className="text-green-600 font-semibold">
                     {customer.totalPrice}
                   </p>
                 </TableCell>
-
                 <TableCell>
                   <p
                     className={`${
@@ -287,15 +357,14 @@ export default function Customers() {
                     {customer.totalPending}
                   </p>
                 </TableCell>
-
                 <TableCell>
                   <span
                     className={`px-4 text-xs py-1 rounded-full  ${
                       customer.totalPending === 0
-                        ? "bg-green-100 text-green-700" // Paid
+                        ? "bg-green-100 text-green-700"
                         : new Date() > new Date(customer.deadline)
-                        ? "bg-red-100 text-red-700" // Overdue
-                        : "bg-yellow-100 text-yellow-700" // Pending
+                        ? "bg-red-100 text-red-700"
+                        : "bg-yellow-100 text-yellow-700"
                     }`}
                   >
                     {customer.totalPending === 0
@@ -305,7 +374,6 @@ export default function Customers() {
                       : "Pending"}
                   </span>
                 </TableCell>
-
                 <TableCell>{customer.lastCheckout}</TableCell>
               </TableRow>
             ))}

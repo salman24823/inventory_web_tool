@@ -13,6 +13,49 @@ import {
 export default function CustomerTable() {
   const [customers, setCustomers] = useState([]);
 
+  const dummyOrders = [
+    {
+      name: "Ali Khan",
+      phone: "03001234567",
+      userImage: "",
+      totalPrice: 12000,
+      amountPaid: 10000,
+      deadline: "2025-04-15",
+    },
+    {
+      name: "Sara Ahmed",
+      phone: "03111234567",
+      userImage: "",
+      totalPrice: 15000,
+      amountPaid: 15000,
+      deadline: "2025-04-10",
+    },
+    {
+      name: "Hamza Tariq",
+      phone: "03221234567",
+      userImage: "",
+      totalPrice: 8000,
+      amountPaid: 4000,
+      deadline: "2025-04-01",
+    },
+    {
+      name: "Ayesha Baloch",
+      phone: "03331234567",
+      userImage: "",
+      totalPrice: 5000,
+      amountPaid: 3000,
+      deadline: "2025-05-01",
+    },
+    {
+      name: "Bilal Shah",
+      phone: "03441234567",
+      userImage: "",
+      totalPrice: 10000,
+      amountPaid: 10000,
+      deadline: "2025-03-20",
+    },
+  ];
+
   const processCustomersData = (orders) => {
     const customersMap = new Map();
 
@@ -21,7 +64,9 @@ export default function CustomerTable() {
         customersMap.set(order.phone, {
           name: order.name,
           phone: order.phone,
-          avatar: order.userImage || "https://static.vecteezy.com/system/resources/previews/000/439/863/non_2x/vector-users-icon.jpg",
+          avatar:
+            order.userImage ||
+            "https://static.vecteezy.com/system/resources/previews/000/439/863/non_2x/vector-users-icon.jpg",
           totalPayment: 0,
           pendingAmount: 0,
           status: "pending",
@@ -30,15 +75,12 @@ export default function CustomerTable() {
 
       const customer = customersMap.get(order.phone);
       customer.totalPayment += parseFloat(order.totalPrice);
-      customer.pendingAmount += parseFloat(order.totalPrice) - parseFloat(order.amountPaid);
+      customer.pendingAmount +=
+        parseFloat(order.totalPrice) - parseFloat(order.amountPaid);
 
-      // Determine status
-      if (customer.pendingAmount === 0) {
-        customer.status = "paid";
-      } else {
-        const isOverdue = new Date(order.deadline) < new Date();
-        customer.status = isOverdue ? "overdue" : "pending";
-      }
+      const isOverdue = new Date(order.deadline) < new Date();
+      customer.status =
+        customer.pendingAmount === 0 ? "paid" : isOverdue ? "overdue" : "pending";
     });
 
     return Array.from(customersMap.values())
@@ -49,24 +91,11 @@ export default function CustomerTable() {
       .slice(0, 5);
   };
 
-  const fetchOrders = async () => {
-    try {
-      const response = await fetch("/api/handleOrder");
-      if (!response.ok) throw new Error("Failed to fetch");
-      const data = await response.json();
-
-      const processedCustomers = processCustomersData(data);
-      setCustomers(processedCustomers);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-    }
-  };
-
   useEffect(() => {
-    fetchOrders();
+    const processedCustomers = processCustomersData(dummyOrders);
+    setCustomers(processedCustomers);
   }, []);
 
-  // Ensure the table always has 5 rows
   const displayedCustomers = [...customers];
   while (displayedCustomers.length < 5) {
     displayedCustomers.push({

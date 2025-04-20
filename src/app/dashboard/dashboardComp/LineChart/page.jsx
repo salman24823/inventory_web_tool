@@ -1,17 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Line } from "react-chartjs-2";
+import React, { useState } from "react";
+import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
-  PointElement,
-  LineElement,
   LinearScale,
+  BarElement,
   Title,
   Tooltip,
   Legend,
-  Filler,
 } from "chart.js";
 import { Tab, Tabs } from "@heroui/react";
 
@@ -19,69 +17,51 @@ import { Tab, Tabs } from "@heroui/react";
 ChartJS.register(
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
+  BarElement,
   Title,
   Tooltip,
-  Legend,
-  Filler
+  Legend
 );
 
 const LineChart = () => {
-  const [data, setData] = useState([]);
   const [timeRange, setTimeRange] = useState("monthly");
 
-  async function HandleOrders() {
-    try {
-      const response = await fetch("/api/handleOrder");
-      const result = await response.json();
-      setData(result);
-    } catch (error) {
-      console.log(error, "error from GET");
-    }
-  }
-
-  useEffect(() => {
-    HandleOrders();
-  }, []);
-
-  const processData = (range) => {
-    const groupedData = {};
-
-    data.forEach((order) => {
-      let key;
-      if (range === "daily") {
-        key = order.issueDate;
-      } else if (range === "monthly") {
-        key = order.issueDate.slice(0, 7); // YYYY-MM
-      } else if (range === "yearly") {
-        key = order.issueDate.slice(0, 4); // YYYY
-      }
-
-      if (!groupedData[key]) {
-        groupedData[key] = 0;
-      }
-      groupedData[key] += parseFloat(order.totalPrice);
-    });
-
-    const labels = Object.keys(groupedData).sort();
-    const values = labels.map((key) => groupedData[key]);
-
-    return { labels, values };
+  const dummyData = {
+    daily: [
+      { date: "2025-04-14", totalPrice: 220 },
+      { date: "2025-04-15", totalPrice: 150 },
+      { date: "2025-04-16", totalPrice: 300 },
+      { date: "2025-04-17", totalPrice: 250 },
+      { date: "2025-04-18", totalPrice: 180 },
+    ],
+    monthly: [
+      { date: "2025-01", totalPrice: 1200 },
+      { date: "2025-02", totalPrice: 980 },
+      { date: "2025-03", totalPrice: 1340 },
+      { date: "2025-04", totalPrice: 1600 },
+    ],
+    yearly: [
+      { date: "2022", totalPrice: 8900 },
+      { date: "2023", totalPrice: 10500 },
+      { date: "2024", totalPrice: 11300 },
+      { date: "2025", totalPrice: 9700 },
+    ],
   };
 
-  const { labels, values } = processData(timeRange);
+  const selectedData = dummyData[timeRange];
+  const labels = selectedData.map((item) => item.date);
+  const values = selectedData.map((item) => item.totalPrice);
 
-  const salesData = {
+  const chartData = {
     labels,
     datasets: [
       {
         label: `${timeRange.charAt(0).toUpperCase() + timeRange.slice(1)} Sales`,
         data: values,
+        backgroundColor: "rgba(75, 192, 192, 0.6)",
         borderColor: "rgba(75, 192, 192, 1)",
-        backgroundColor: "#e1e1e12e",
-        tension: 0.4,
-        fill: true,
+        borderWidth: 1,
+        borderRadius: 6,
       },
     ],
   };
@@ -92,13 +72,12 @@ const LineChart = () => {
     scales: {
       x: {
         grid: {
-          display: true,
-          color: "rgba(200, 200, 200, 0.2)",
+          display: false,
         },
       },
       y: {
+        beginAtZero: true,
         grid: {
-          display: true,
           color: "rgba(200, 200, 200, 0.2)",
         },
       },
@@ -107,7 +86,6 @@ const LineChart = () => {
 
   return (
     <div className="bg-white h-full flex flex-col p-6 rounded-lg shadow-md">
-
       <div className="w-full flex justify-between">
         <h1 className="py-2 px-10 bg-gray-100 rounded-full shadow-sm">Detailed Analysis</h1>
         <Tabs
@@ -123,8 +101,8 @@ const LineChart = () => {
           <Tab key="yearly" title="Yearly" />
         </Tabs>
       </div>
-      <div className="flex-1">
-        <Line data={salesData} options={options} />
+      <div className="flex-1 mt-4">
+        <Bar data={chartData} options={options} />
       </div>
     </div>
   );

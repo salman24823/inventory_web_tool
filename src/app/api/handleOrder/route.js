@@ -26,6 +26,7 @@ export async function POST(req) {
 
   try {
     const data = await req.json();
+    
 
     console.log(data, "data");
 
