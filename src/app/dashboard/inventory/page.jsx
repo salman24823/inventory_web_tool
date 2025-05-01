@@ -14,7 +14,7 @@ import {
   DropdownItem,
   Button,
 } from "@heroui/react";
-import { ChevronDown, X, Eye, Feather } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import { PlusCircleIcon } from "lucide-react";
 import Detail from "./detail";
 import Action from "./action";
