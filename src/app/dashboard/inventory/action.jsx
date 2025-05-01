@@ -39,6 +39,7 @@ export default function Action() {
 
   // Miscellaneous Charges
   const [miscCharges, setMiscCharges] = useState([]);
+  
   const [miscDesc, setMiscDesc] = useState("");
   const [miscCostPerUnit, setMiscCostPerUnit] = useState("");
   const [transportExpanses, setTransportExpanses] = useState("");
@@ -59,6 +60,7 @@ export default function Action() {
     (sum, e) => sum + Number(e.totalCost || 0),
     0
   );
+
   const overallCost = netCost + miscTotal;
   const pendingPayment = overallCost - Number(paidAmount || 0);
 
