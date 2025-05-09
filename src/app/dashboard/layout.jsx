@@ -4,7 +4,7 @@ import React from "react";
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, LogOut, X, Factory } from "lucide-react"; // Assuming you're using Lucide icons
+import { User, LogOut, X, Factory, ChartNoAxesColumn } from "lucide-react"; // Assuming you're using Lucide icons
 import { Home } from "lucide-react";
 import { Button } from "@heroui/react";
 import Header from "../components/header/page";
@@ -62,6 +62,11 @@ const Layout = ({ children }) => {
       name: "Factory",
       path: "/dashboard/factory",
       icon: <Factory  className="w-5 h-5 text-gray-600" />,
+    },
+    {
+      name: "PO #",
+      path: "/dashboard/PO",
+      icon: <ChartNoAxesColumn  className="w-5 h-5 text-gray-600" />,
     },
   ];
 

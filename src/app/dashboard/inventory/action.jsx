@@ -20,65 +20,80 @@ import {
 import { Plus } from "lucide-react";
 import { toast } from "react-toastify";
 
-export default function Action() {
+export default function Action({ factories, poNumbers }) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   // Main stock fields
-  const [factory, setFactory] = useState("");
-  const [purchaseOrder, setPurchaseOrder] = useState("");
+  const [factoryName, setFactoryName] = useState("");
+  const [purchaseOrderNumber, setPurchaseOrderNumber] = useState("");
   const [unitType, setUnitType] = useState("");
-  const [qualityType, setQualityType] = useState("");
-  const [totalQuantity, setTotalQuantity] = useState("");
-  const [scratchQty, setScratchQty] = useState("");
-  const [costPerUnit, setCostPerUnit] = useState("");
-  const [payPerUnit, setPayPerUnit] = useState("");
-  const [paidAmount, setPaidAmount] = useState("");
+  const [clothQuality, setClothQuality] = useState("");
+  const [grayClothQuantity, setGrayClothQuantity] = useState("");
+  const [scratchQuantity, setScratchQuantity] = useState("");
+  const [baseCostPerUnit, setBaseCostPerUnit] = useState("");
+  const [factoryPaymentPerUnit, setFactoryPaymentPerUnit] = useState("");
+  const [amountPaid, setAmountPaid] = useState("");
   const [issueDate, setIssueDate] = useState("");
-  const [deadline, setDeadline] = useState("");
+  const [deadlineDate, setDeadlineDate] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Miscellaneous Charges
-  const [miscCharges, setMiscCharges] = useState([]);
-  
-  const [miscDesc, setMiscDesc] = useState("");
-  const [miscCostPerUnit, setMiscCostPerUnit] = useState("");
-  const [transportExpanses, setTransportExpanses] = useState("");
+  // Per Unit Charges
+  const [perUnitCharges, setPerUnitCharges] = useState([]);
+  const [perUnitDescription, setPerUnitDescription] = useState("");
+  const [perUnitCost, setPerUnitCost] = useState("");
 
+  // Fixed Charges
+  const [fixedCharges, setFixedCharges] = useState([]);
+  const [fixedDescription, setFixedDescription] = useState("");
+  const [fixedCost, setFixedCost] = useState("");
 
-  const factories = [
-    "Faisalabad Grey Mills",
-    "Punjab Textiles",
-    "Al-Noor Weaving Factory",
-    "Karachi WeaveTech",
-    "Lahore GreyCloth Co.",
-  ];
+  // Transport Expenses
+  const [transportExpenses, setTransportExpenses] = useState("");
 
-  const purchaseOrders = ["PO 1", "PO 2", "PO 3", "PO 4", "PO 5"];
-
-  const netCost = Number(totalQuantity || 0) * Number(costPerUnit || 0);
-  const miscTotal = miscCharges.reduce(
+  // Calculations
+  const netBaseCost = Number(grayClothQuantity || 0) * Number(baseCostPerUnit || 0);
+  const totalPerUnitCost = perUnitCharges.reduce(
     (sum, e) => sum + Number(e.totalCost || 0),
     0
   );
+  const totalFixedCost = fixedCharges.reduce(
+    (sum, e) => sum + Number(e.totalCost || 0),
+    0
+  );
+  const totalMiscellaneousCost = totalPerUnitCost + totalFixedCost;
+  const totalCost = netBaseCost + totalMiscellaneousCost;
+  const pendingPayment = totalCost - Number(amountPaid || 0);
 
-  const overallCost = netCost + miscTotal;
-  const pendingPayment = overallCost - Number(paidAmount || 0);
+  const addPerUnitCharge = () => {
+    if (!perUnitDescription || !perUnitCost || !grayClothQuantity) return;
 
-  const addMiscCharge = () => {
-    if (!miscDesc || !miscCostPerUnit || !totalQuantity) return;
-
-    const costPerU = Number(miscCostPerUnit);
-    const qty = Number(totalQuantity);
-    setMiscCharges((prev) => [
+    const costPerUnit = Number(perUnitCost);
+    const quantity = Number(grayClothQuantity);
+    setPerUnitCharges((prev) => [
       ...prev,
       {
-        desc: miscDesc,
-        costPerUnit: costPerU,
-        totalCost: costPerU * qty,
+        desc: perUnitDescription,
+        costPerUnit,
+        totalCost: costPerUnit * quantity,
       },
     ]);
-    setMiscDesc("");
-    setMiscCostPerUnit("");
+    setPerUnitDescription("");
+    setPerUnitCost("");
+  };
+
+  const addFixedCharge = () => {
+    if (!fixedDescription || !fixedCost) return;
+
+    const totalCost = Number(fixedCost);
+    setFixedCharges((prev) => [
+      ...prev,
+      {
+        desc: fixedDescription,
+        totalCost,
+      },
+    ]);
+    setFixedDescription("");
+    setFixedCost("");
   };
 
   const handleSubmit = (e) => {
@@ -86,22 +101,22 @@ export default function Action() {
     setLoading(true);
 
     const stockData = {
-      factory,
-      purchaseOrder,
+      factoryName,
+      purchaseOrderNumber,
       unitType,
-      qualityType,
-      totalQuantity,
-      scratchQty,
-      costPerUnit,
-      payPerUnit,
-      transportExpanses, // <- add this
-      paidAmount,
+      clothQuality,
+      grayClothQuantity,
+      scratchQuantity,
+      baseCostPerUnit,
+      factoryPaymentPerUnit,
+      transportExpenses,
+      amountPaid,
       pendingPayment,
       issueDate,
-      deadline,
-      miscCharges,
+      deadlineDate,
+      perUnitCharges,
+      fixedCharges,
     };
-
 
     console.log("Stock Record Submitted:", stockData);
     toast.success("Stock entry added successfully!");
@@ -133,8 +148,8 @@ export default function Action() {
                   <Select
                     label="Factory"
                     placeholder="Choose a factory"
-                    selectedKeys={[factory]}
-                    onSelectionChange={(key) => setFactory(key.currentKey)}
+                    selectedKeys={[factoryName]}
+                    onSelectionChange={(key) => setFactoryName(key.currentKey)}
                   >
                     {factories.map((name) => (
                       <SelectItem key={name} value={name}>
@@ -147,12 +162,12 @@ export default function Action() {
                   <Select
                     label="Purchase Order"
                     placeholder="Choose PO"
-                    selectedKeys={[purchaseOrder]}
+                    selectedKeys={[purchaseOrderNumber]}
                     onSelectionChange={(key) =>
-                      setPurchaseOrder(key.currentKey)
+                      setPurchaseOrderNumber(key.currentKey)
                     }
                   >
-                    {purchaseOrders.map((po) => (
+                    {poNumbers?.map((po) => (
                       <SelectItem key={po} value={po}>
                         {po}
                       </SelectItem>
@@ -177,78 +192,107 @@ export default function Action() {
 
                   <Input
                     label="Cloth Quality"
-                    value={qualityType}
-                    onChange={(e) => setQualityType(e.target.value)}
+                    value={clothQuality}
+                    onChange={(e) => setClothQuality(e.target.value)}
                     required
                   />
                   <Input
                     label="Gray Cloth Quantity"
-                    value={totalQuantity}
-                    onChange={(e) => setTotalQuantity(e.target.value)}
+                    value={grayClothQuantity}
+                    onChange={(e) => setGrayClothQuantity(e.target.value)}
                     required
                   />
                   <Input
                     label="Scratch Quantity"
-                    value={scratchQty}
-                    onChange={(e) => setScratchQty(e.target.value)}
+                    value={scratchQuantity}
+                    onChange={(e) => setScratchQuantity(e.target.value)}
                     required
                   />
                   <Input
                     label="Base Cost Per Unit"
-                    value={costPerUnit}
-                    onChange={(e) => setCostPerUnit(e.target.value)}
+                    value={baseCostPerUnit}
+                    onChange={(e) => setBaseCostPerUnit(e.target.value)}
                     required
                   />
                   <Input
                     label="Factory Payment Per Unit"
-                    value={payPerUnit}
-                    onChange={(e) => setPayPerUnit(e.target.value)}
+                    value={factoryPaymentPerUnit}
+                    onChange={(e) => setFactoryPaymentPerUnit(e.target.value)}
                     required
                   />
-
                   <Input
-                    label="Total Transport Expanses"
-                    value={transportExpanses}
-                    onChange={(e) => setTransportExpanses(e.target.value)}
+                    label="Total Transport Expenses"
+                    value={transportExpenses}
+                    onChange={(e) => setTransportExpenses(e.target.value)}
                     required
                   />
 
-                  {/* Miscellaneous Section */}
+                  {/* Per Unit Charges Section */}
                   <div className="border p-4 rounded-md bg-gray-50 space-y-2">
-                    <p className="font-semibold text-sm">
-                      Miscellaneous Charges (per unit)
-                    </p>
-                    {miscCharges.map((item, index) => (
+                    <p className="font-semibold text-sm">Per Unit Charges</p>
+                    {perUnitCharges.map((item, index) => (
                       <div
                         key={index}
                         className="text-sm flex justify-between text-gray-700"
                       >
                         <span>{item.desc}</span>
-                        <span>Rs. {item.costPerUnit} x Qty = {item.totalCost}</span>
+                        <span>
+                          Rs. {item.costPerUnit} x {grayClothQuantity} = {item.totalCost}
+                        </span>
                       </div>
                     ))}
                     <div className="flex flex-col gap-2 mt-2">
                       <Input
                         placeholder="Description"
-                        value={miscDesc}
-                        onChange={(e) => setMiscDesc(e.target.value)}
+                        value={perUnitDescription}
+                        onChange={(e) => setPerUnitDescription(e.target.value)}
                       />
                       <Input
                         placeholder="Cost Per Unit"
                         type="number"
-                        value={miscCostPerUnit}
-                        onChange={(e) => setMiscCostPerUnit(e.target.value)}
+                        value={perUnitCost}
+                        onChange={(e) => setPerUnitCost(e.target.value)}
                       />
-                      <Button size="sm" onPress={addMiscCharge}>
-                        Add Misc Charge
+                      <Button size="sm" onPress={addPerUnitCharge}>
+                        Add Per Unit Charge
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Fixed Charges Section */}
+                  <div className="border p-4 rounded-md bg-gray-50 space-y-2">
+                    <p className="font-semibold text-sm">Fixed Charges</p>
+                    {fixedCharges.map((item, index) => (
+                      <div
+                        key={index}
+                        className="text-sm flex justify-between text-gray-700"
+                      >
+                        <span>{item.desc}</span>
+                        <span>Rs. {item.totalCost}</span>
+                      </div>
+                    ))}
+                    <div className="flex flex-col gap-2 mt-2">
+                      <Input
+                        placeholder="Description"
+                        value={fixedDescription}
+                        onChange={(e) => setFixedDescription(e.target.value)}
+                      />
+                      <Input
+                        placeholder="Total Cost"
+                        type="number"
+                        value={fixedCost}
+                        onChange={(e) => setFixedCost(e.target.value)}
+                      />
+                      <Button size="sm" onPress={addFixedCharge}>
+                        Add Fixed Charge
                       </Button>
                     </div>
                   </div>
 
                   <Input
                     label="Amount Paid"
-                    value={paidAmount}
-                    onChange={(e) => setPaidAmount(e.target.value)}
+                    value={amountPaid}
+                    onChange={(e) => setAmountPaid(e.target.value)}
                     required
                   />
 
@@ -256,11 +300,19 @@ export default function Action() {
                   <div className="bg-gray-100 p-3 rounded-md space-y-1 text-sm border">
                     <p>
                       Net Base Cost:{" "}
-                      <strong>Rs. {netCost.toFixed(2)}</strong>
+                      <strong>Rs. {netBaseCost.toFixed(2)}</strong>
+                    </p>
+                    <p>
+                      Total Per Unit Charges:{" "}
+                      <strong>Rs. {totalPerUnitCost.toFixed(2)}</strong>
+                    </p>
+                    <p>
+                      Total Fixed Charges:{" "}
+                      <strong>Rs. {totalFixedCost.toFixed(2)}</strong>
                     </p>
                     <p>
                       Total Miscellaneous:{" "}
-                      <strong>Rs. {miscTotal.toFixed(2)}</strong>
+                      <strong>Rs. {totalMiscellaneousCost.toFixed(2)}</strong>
                     </p>
                     <p>
                       Total Pending:{" "}
@@ -279,8 +331,8 @@ export default function Action() {
                   <Input
                     label="Deadline"
                     type="date"
-                    value={deadline}
-                    onChange={(e) => setDeadline(e.target.value)}
+                    value={deadlineDate}
+                    onChange={(e) => setDeadlineDate(e.target.value)}
                   />
 
                   <ModalFooter className="px-0">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Table,
   TableHeader,
@@ -18,65 +18,27 @@ import { ChevronDown, X } from "lucide-react";
 import { PlusCircleIcon } from "lucide-react";
 import Detail from "./detail";
 import Action from "./action";
+import useGlobalStore from "@/app/store/globalstore";
+
+// Sample dummy data (replace with actual data source)
+const dummyStocks = [
+  { _id: "1", poNumber: "PO 1", quality: "High", status: "In-Stock", quantity: 100, unit: "units" },
+  { _id: "2", poNumber: "PO 2", quality: "Medium", status: "Out-of-Stock", quantity: 0, unit: "units" },
+];
 
 export default function Stock() {
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [selectedMonth, setSelectedMonth] = useState("Select Month");
   const [selectedYear, setSelectedYear] = useState("Select Year");
   const [selectedPO, setSelectedPO] = useState("All PO Numbers");
+  const [selectedFactory, setSelectedFactory] = useState("All Factories");
 
-  const dummyStocks = [
-    {
-      _id: "1",
-      quality: "22*12 Cotton",
-      quantity: 5000,
-      unit: "Meters",
-      status: "In-Stock",
-      paymentStatus: "Paid",
-      poNumber: "PO3001",
-      lastCheckout: "2025-04-01",
-    },
-    {
-      _id: "2",
-      quality: "22*12 Cotton",
-      quantity: 0,
-      unit: "Meters",
-      status: "Out-of-Stock",
-      paymentStatus: "Pending",
-      poNumber: "PO3002",
-      lastCheckout: "2025-03-15",
-    },
-    {
-      _id: "3",
-      quality: "22*12 Cotton",
-      quantity: 12000,
-      unit: "Yards",
-      status: "In-Stock",
-      paymentStatus: "Paid",
-      poNumber: "PO3003",
-      lastCheckout: "2025-02-28",
-    },
-    {
-      _id: "4",
-      quality: "22*12 Cotton",
-      quantity: 4500,
-      unit: "Rolls",
-      status: "In-Stock",
-      paymentStatus: "Paid",
-      poNumber: "PO3004",
-      lastCheckout: "2025-04-10",
-    },
-    {
-      _id: "5",
-      quality: "22*12 Cotton",
-      quantity: 0,
-      unit: "Meters",
-      status: "Out-of-Stock",
-      paymentStatus: "Overdue",
-      poNumber: "PO3005",
-      lastCheckout: "2025-03-20",
-    },
-  ];
+  const { fetchFactoryName, fetchPONumber, factories, poNumbers } = useGlobalStore();
+
+  useEffect(() => {
+    fetchFactoryName();
+    fetchPONumber();
+  }, [fetchFactoryName, fetchPONumber]);
 
   const handleRowClick = (stock) => {
     alert(`Viewing details for ${stock.poNumber}`);
@@ -92,8 +54,6 @@ export default function Stock() {
     const matchesPO = selectedPO === "All PO Numbers" || stock.poNumber === selectedPO;
     return matchesStatus && matchesPO;
   });
-
-  const uniquePONumbers = Array.from(new Set(dummyStocks.map((stock) => stock.poNumber)));
 
   return (
     <section className="w-full flex flex-col gap-4">
@@ -127,7 +87,7 @@ export default function Stock() {
                 </Button>
               </DropdownTrigger>
               <DropdownMenu>
-                {["January", "February", "March", "April"].map((option) => (
+                {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((option) => (
                   <DropdownItem key={option} onPress={() => setSelectedMonth(option)}>
                     {option}
                   </DropdownItem>
@@ -144,7 +104,7 @@ export default function Stock() {
                 </Button>
               </DropdownTrigger>
               <DropdownMenu>
-                {["2025", "2026", "2027"].map((option) => (
+                {["2025", "2026", "2027", "2028", "2029", "2030", "2031", "2032", "2033"].map((option) => (
                   <DropdownItem key={option} onPress={() => setSelectedYear(option)}>
                     {option}
                   </DropdownItem>
@@ -161,9 +121,26 @@ export default function Stock() {
                 </Button>
               </DropdownTrigger>
               <DropdownMenu>
-                {["All PO Numbers", ...uniquePONumbers].map((po) => (
+                {["All PO Numbers", ...poNumbers].map((po) => (
                   <DropdownItem key={po} onPress={() => setSelectedPO(po)}>
                     {po}
+                  </DropdownItem>
+                ))}
+              </DropdownMenu>
+            </Dropdown>
+
+            {/* Filter by Factory */}
+            <Dropdown placement="bottom-start">
+              <DropdownTrigger>
+                <Button variant="ghost" className="w-48 flex justify-between">
+                  {selectedFactory}
+                  <ChevronDown className="text-gray-500" />
+                </Button>
+              </DropdownTrigger>
+              <DropdownMenu>
+                {["All Factories", ...factories].map((factory) => (
+                  <DropdownItem key={factory} onPress={() => setSelectedFactory(factory)}>
+                    {factory}
                   </DropdownItem>
                 ))}
               </DropdownMenu>
@@ -178,13 +155,14 @@ export default function Stock() {
                 setSelectedMonth("Select Month");
                 setSelectedYear("Select Year");
                 setSelectedPO("All PO Numbers");
+                setSelectedFactory("All Factories");
               }}
             >
               <X className="w-4 h-4" />
               Clear Filters
             </Button>
           </div>
-          <Action />
+          <Action poNumbers={poNumbers} factories={factories} />
         </div>
       </div>
 
@@ -222,12 +200,7 @@ export default function Stock() {
               </TableCell>
               <TableCell className="text-nowrap">
                 <div className="flex gap-3 items-center">
-                  {/* <Eye
-                    onClick={() => handleRowClick(stock)}
-                    className="text-blue-600 hover:cursor-pointer"
-                  /> */}
                   <Detail />
-
                   <PlusCircleIcon
                     onClick={() => handleRefillClick(stock)}
                     className="text-green-600 hover:cursor-pointer"
