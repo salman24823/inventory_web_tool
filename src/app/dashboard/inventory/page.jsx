@@ -1,30 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-  Button,
-} from "@heroui/react";
-import { ChevronDown, X } from "lucide-react";
-import { PlusCircleIcon } from "lucide-react";
-import Detail from "./detail";
-import Action from "./action";
 import useGlobalStore from "@/app/store/globalstore";
-
-// Sample dummy data (replace with actual data source)
-const dummyStocks = [
-  { _id: "1", poNumber: "PO 1", quality: "High", status: "In-Stock", quantity: 100, unit: "units" },
-  { _id: "2", poNumber: "PO 2", quality: "Medium", status: "Out-of-Stock", quantity: 0, unit: "units" },
-];
+import TableComp from "./table";
+import Filters from "./filters";
 
 export default function Stock() {
   const [selectedFilter, setSelectedFilter] = useState("All");
@@ -32,186 +11,91 @@ export default function Stock() {
   const [selectedYear, setSelectedYear] = useState("Select Year");
   const [selectedPO, setSelectedPO] = useState("All PO Numbers");
   const [selectedFactory, setSelectedFactory] = useState("All Factories");
-
   const { fetchFactoryName, fetchPONumber, factories, poNumbers } = useGlobalStore();
+  const [stocks, setStocks] = useState([]);
+
+  async function fetchStocks() {
+    try {
+      const response = await fetch("/api/handleStock", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await response.json();
+      setStocks(data);
+    } catch (error) {
+      console.error("Error fetching stocks:", error);
+    }
+  }
+
+  async function handleDeleteClick(stock) {
+    try {
+      const response = await fetch(`/api/handleStock?_id=${stock._id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.ok) {
+        alert(`Deleted stock for ${stock.purchaseOrderNumber}`);
+        fetchStocks(); // Refresh stocks after deletion
+      } else {
+        alert("Failed to delete stock");
+      }
+    } catch (error) {
+      console.error("Error deleting stock:", error);
+      alert("Error deleting stock");
+    }
+  }
 
   useEffect(() => {
     fetchFactoryName();
     fetchPONumber();
+    fetchStocks();
   }, [fetchFactoryName, fetchPONumber]);
 
-  const handleRowClick = (stock) => {
-    alert(`Viewing details for ${stock.poNumber}`);
-  };
-
-  const handleRefillClick = (stock) => {
-    alert(`Refilling stock for ${stock.poNumber}`);
-  };
-
-  const filteredStocks = dummyStocks.filter((stock) => {
-    const stockStatus = stock.quantity > 0 ? "In-Stock" : "Out-of-Stock";
+  const filteredStocks = stocks.filter((stock) => {
+    const stockStatus = stock.grayClothQuantity > 0 ? "In-Stock" : "Out-of-Stock";
     const matchesStatus = selectedFilter === "All" || stockStatus === selectedFilter;
-    const matchesPO = selectedPO === "All PO Numbers" || stock.poNumber === selectedPO;
-    return matchesStatus && matchesPO;
+    const matchesPO = selectedPO === "All PO Numbers" || stock.purchaseOrderNumber === selectedPO;
+    const matchesFactory = selectedFactory === "All Factories" || stock.factoryName === selectedFactory;
+
+    // Month and Year filtering
+    const issueDate = new Date(stock.issueDate);
+    const stockMonth = issueDate.toLocaleString("default", { month: "long" });
+    const stockYear = issueDate.getFullYear().toString();
+    const matchesMonth = selectedMonth === "Select Month" || stockMonth === selectedMonth;
+    const matchesYear = selectedYear === "Select Year" || stockYear === selectedYear;
+
+    return matchesStatus && matchesPO && matchesFactory && matchesMonth && matchesYear;
   });
 
   return (
     <section className="w-full flex flex-col gap-4">
       <div className="shadow-small payment-filter flex flex-col gap-3 w-full p-4 bg-white">
         <h2 className="text-medium text-gray-700 font-normal">Select Filter:</h2>
-        <div className="flex justify-between">
-          <div className="relative flex gap-3 items-center flex-wrap">
-            {/* Filter by Status */}
-            <Dropdown placement="bottom-start">
-              <DropdownTrigger>
-                <Button variant="ghost" className="w-40 flex justify-between">
-                  {selectedFilter}
-                  <ChevronDown className="text-gray-500" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu>
-                {["All", "In-Stock", "Out-of-Stock"].map((option) => (
-                  <DropdownItem key={option} onPress={() => setSelectedFilter(option)}>
-                    {option}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-
-            {/* Filter by Month */}
-            <Dropdown placement="bottom-start">
-              <DropdownTrigger>
-                <Button variant="ghost" className="w-40 flex justify-between">
-                  {selectedMonth}
-                  <ChevronDown className="text-gray-500" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu>
-                {["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"].map((option) => (
-                  <DropdownItem key={option} onPress={() => setSelectedMonth(option)}>
-                    {option}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-
-            {/* Filter by Year */}
-            <Dropdown placement="bottom-start">
-              <DropdownTrigger>
-                <Button variant="ghost" className="w-40 flex justify-between">
-                  {selectedYear}
-                  <ChevronDown className="text-gray-500" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu>
-                {["2025", "2026", "2027", "2028", "2029", "2030", "2031", "2032", "2033"].map((option) => (
-                  <DropdownItem key={option} onPress={() => setSelectedYear(option)}>
-                    {option}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-
-            {/* Filter by PO Number */}
-            <Dropdown placement="bottom-start">
-              <DropdownTrigger>
-                <Button variant="ghost" className="w-48 flex justify-between">
-                  {selectedPO}
-                  <ChevronDown className="text-gray-500" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu>
-                {["All PO Numbers", ...poNumbers].map((po) => (
-                  <DropdownItem key={po} onPress={() => setSelectedPO(po)}>
-                    {po}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-
-            {/* Filter by Factory */}
-            <Dropdown placement="bottom-start">
-              <DropdownTrigger>
-                <Button variant="ghost" className="w-48 flex justify-between">
-                  {selectedFactory}
-                  <ChevronDown className="text-gray-500" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu>
-                {["All Factories", ...factories].map((factory) => (
-                  <DropdownItem key={factory} onPress={() => setSelectedFactory(factory)}>
-                    {factory}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-
-            {/* Clear Filters */}
-            <Button
-              variant="ghost"
-              className="flex items-center gap-2"
-              onPress={() => {
-                setSelectedFilter("All");
-                setSelectedMonth("Select Month");
-                setSelectedYear("Select Year");
-                setSelectedPO("All PO Numbers");
-                setSelectedFactory("All Factories");
-              }}
-            >
-              <X className="w-4 h-4" />
-              Clear Filters
-            </Button>
-          </div>
-          <Action poNumbers={poNumbers} factories={factories} />
-        </div>
+        <Filters
+          selectedFilter={selectedFilter}
+          setSelectedFilter={setSelectedFilter}
+          selectedMonth={selectedMonth}
+          setSelectedMonth={setSelectedMonth}
+          selectedYear={selectedYear}
+          setSelectedYear={setSelectedYear}
+          selectedPO={selectedPO}
+          setSelectedPO={setSelectedPO}
+          selectedFactory={selectedFactory}
+          setSelectedFactory={setSelectedFactory}
+          poNumbers={poNumbers}
+          factories={factories}
+          fetchStocks={fetchStocks}
+        />
       </div>
 
-      {/* Table */}
-      <Table className="overflow-x-scroll text-nowrap custom-scrollbar" aria-label="Stock analysis table">
-        <TableHeader>
-          <TableColumn>#</TableColumn>
-          <TableColumn className="min-w-36">PO NUMBER</TableColumn>
-          <TableColumn className="min-w-40">STOCK QUALITY</TableColumn>
-          <TableColumn className="min-w-36">STATUS</TableColumn>
-          <TableColumn className="min-w-36">QUANTITY</TableColumn>
-          <TableColumn>ACTION</TableColumn>
-        </TableHeader>
-
-        <TableBody emptyContent="No Stocks Found">
-          {filteredStocks.map((stock, index) => (
-            <TableRow className="hover:bg-gray-100 space-x-10" key={stock._id}>
-              <TableCell>{index + 1}</TableCell>
-              <TableCell>{stock.poNumber}</TableCell>
-              <TableCell className="text-nowrap">
-                <p className="text-sm text-gray-500">{stock.quality}</p>
-              </TableCell>
-              <TableCell>
-                <span
-                  className={`px-4 text-xs py-1 rounded-full ${stock.status === "In-Stock" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-                    }`}
-                >
-                  {stock.status}
-                </span>
-              </TableCell>
-              <TableCell>
-                <p className="text-sm text-gray-700">
-                  <span className="text-black font-semibold">{stock.quantity}</span> {stock.unit}
-                </p>
-              </TableCell>
-              <TableCell className="text-nowrap">
-                <div className="flex gap-3 items-center">
-                  <Detail />
-                  <PlusCircleIcon
-                    onClick={() => handleRefillClick(stock)}
-                    className="text-green-600 hover:cursor-pointer"
-                  />
-                  <X className="text-red-600 hover:cursor-pointer" />
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <TableComp
+        stocks={filteredStocks}
+        handleDeleteClick={handleDeleteClick}
+      />
     </section>
   );
 }

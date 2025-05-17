@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 
 const useGlobalStore = create((set) => ({
-  data: 0,
+
   factories: [],
   poNumbers: [],
 

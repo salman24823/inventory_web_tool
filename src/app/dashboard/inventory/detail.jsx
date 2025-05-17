@@ -7,35 +7,27 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  useDisclosure
+  useDisclosure,
 } from "@heroui/react";
 import { Eye } from "lucide-react";
 
-export default function Detail() {
-
+export default function Detail({ stock }) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  const stock = {
-    quality: "22*12 Cotton",
-    quantity: 120,
-    unit: "kg",
-    totalPrice: 24000,
-    costPerUnit: 200,
-    amountPaid: 12000,
-    companyLogo: "",
-    companyName: "Fresh Agro Pvt Ltd",
-    phone: "0300-1234567",
-    issueDate: "2025-04-15",
-    deadline: "2025-05-01",
-  };
-
-  // Miscellaneous Charges
-  const [miscCharges] = useState([
-    { description: "Dyes", cost: 500 },
-    { description: "Cutting", cost: 300 },
-    { description: "Printing", cost: 400 },
-    { description: "Packing", cost: 200 },
-  ]);
+  // Combine perUnitCharges and fixedCharges for miscellaneous charges
+  const miscCharges = [
+    ...(stock.perUnitCharges || []).map((charge) => ({
+      description: charge.desc,
+      cost: charge.totalCost,
+    })),
+    ...(stock.fixedCharges || []).map((charge) => ({
+      description: charge.desc,
+      cost: charge.totalCost,
+    })),
+    ...(stock.transportExpenses
+      ? [{ description: "Transport", cost: stock.transportExpenses }]
+      : []),
+  ];
 
   return (
     <>
@@ -48,26 +40,31 @@ export default function Detail() {
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1">
-                Detailed Overview :
+                Detailed Overview: {stock.factoryName} | {stock.purchaseOrderNumber}
               </ModalHeader>
               <ModalBody>
                 <div className="bg-white w-full">
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                     {/* Left Column */}
                     <div className="space-y-4">
                       <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
                         <h2 className="text-lg font-semibold text-gray-700">Stock Quality</h2>
-                        <p className="text-gray-600">{stock.quality}</p>
+                        <p className="text-gray-600">{stock.clothQuality}</p>
                       </div>
 
                       <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
                         <h2 className="text-lg font-semibold text-gray-700">Stock Quantity</h2>
                         <div className="flex gap-2">
-
-                          <p className="text-gray-600">{stock.quantity} {stock.unit}</p>
-
-                          <p className={`font-medium ${stock.quantity === 0 ? "text-red-600" : "text-green-600"}`}>
-                            {stock.quantity === 0 ? "Out of Stock" : "In Stock"}
+                          <p className="text-gray-600">
+                            {stock.stockQuantity} {stock.unitType || "N/A"}
+                          </p>
+                          <p
+                            className={`font-medium ${
+                              stock.stockQuantity === 0 ? "text-red-600" : "text-green-600"
+                            }`}
+                          >
+                            {stock.stockQuantity === 0 ? "Out of Stock" : "In Stock"}
                           </p>
                         </div>
                       </div>
@@ -76,11 +73,11 @@ export default function Detail() {
                         <div className="grid grid-cols-2">
                           <div>
                             <h2 className="text-lg font-semibold text-gray-700">Total Cost</h2>
-                            <p className="text-gray-600">{stock.totalPrice} PKR</p>
+                            <p className="text-gray-600">{stock.totalCost} PKR</p>
                           </div>
                           <div>
                             <h2 className="text-lg font-semibold text-gray-700">Cost Per Unit</h2>
-                            <p className="text-gray-600">{stock.costPerUnit} PKR</p>
+                            <p className="text-gray-600">{stock.baseCostPerUnit} PKR</p>
                           </div>
                         </div>
                       </div>
@@ -93,39 +90,38 @@ export default function Detail() {
                           </div>
                           <div>
                             <h2 className="text-lg font-semibold text-gray-700">Remaining Amount</h2>
-                            <p className="text-gray-600">
-                              {stock.totalPrice - stock.amountPaid} PKR
-                            </p>
+                            <p className="text-gray-600">{stock.pendingPayment} PKR</p>
                           </div>
                         </div>
-                      </div>
-
-        
-                      <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
-                        <h1 className="text-xl font-bold text-gray-800 mt-3">{stock.companyName}</h1>
-                        <p className="text-gray-600">{stock.phone}</p>
                       </div>
                     </div>
 
                     {/* Right Column */}
                     <div className="space-y-4 border-l border-gray-200 pl-6">
-
                       <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
                         <h2 className="text-lg font-semibold text-gray-700">Payment Issue Date</h2>
-                        <p className="text-gray-600">{new Date(stock.issueDate).toLocaleDateString()}</p>
+                        <p className="text-gray-600">
+                          {new Date(stock.issueDate).toLocaleDateString()}
+                        </p>
                       </div>
 
                       <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
                         <h2 className="text-lg font-semibold text-gray-700">Payment Status</h2>
-                        <p className={`font-medium ${stock.amountPaid >= stock.totalPrice ? "text-green-600" : "text-red-600"}`}>
-                          {stock.amountPaid >= stock.totalPrice ? "Clear" : "Pending Payment"}
+                        <p
+                          className={`font-medium ${
+                            stock.pendingPayment === 0 ? "text-green-600" : "text-red-600"
+                          }`}
+                        >
+                          {stock.pendingPayment === 0 ? "Clear" : "Pending Payment"}
                         </p>
                       </div>
 
-                      {stock.deadline && (
+                      {stock.deadlineDate && (
                         <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
                           <h2 className="text-lg font-semibold text-gray-700">Payment Deadline</h2>
-                          <p className="text-red-600 font-semibold">{new Date(stock.deadline).toLocaleDateString()}</p>
+                          <p className="text-red-600 font-semibold">
+                            {new Date(stock.deadlineDate).toLocaleDateString()}
+                          </p>
                         </div>
                       )}
 
@@ -133,12 +129,16 @@ export default function Detail() {
                       <div className="bg-slate-50 border border-gray-300 p-4 rounded-lg">
                         <h2 className="text-lg font-semibold text-gray-700">Miscellaneous Charges</h2>
                         <div className="space-y-2">
-                          {miscCharges.map((charge, index) => (
-                            <div key={index} className="flex justify-between">
-                              <p className="text-gray-600">{charge.description}</p>
-                              <p className="text-gray-600">{charge.cost} PKR</p>
-                            </div>
-                          ))}
+                          {miscCharges.length > 0 ? (
+                            miscCharges.map((charge, index) => (
+                              <div key={index} className="flex justify-between">
+                                <p className="text-gray-600">{charge.description}</p>
+                                <p className="text-gray-600">{charge.cost} PKR</p>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-gray-600">No miscellaneous charges</p>
+                          )}
                         </div>
                       </div>
                     </div>

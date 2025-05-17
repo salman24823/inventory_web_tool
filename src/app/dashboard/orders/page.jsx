@@ -1,519 +1,191 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-  useDisclosure,
-  Button,
-  Tabs, Tab
-} from "@heroui/react";
-import { ChevronDown, X } from "lucide-react";
-import Action from "./action";
-import { Spinner } from "@heroui/react";
+import React, { useEffect, useState, useCallback } from "react";
+import { useDisclosure } from "@heroui/react";
 import { toast } from "react-toastify";
-import { Eye } from "lucide-react";
-import Detail from "./detail";
 import { useSession } from "next-auth/react";
+import { FilterSection } from "./Filters"; 
+import { OrderTable } from "./salesTable";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@heroui/react";
 
-export default function Inventory() {
+const Detail = ({ isOpen, onOpenChange, selectedOrder, fetchOrders }) => {
+  return (
+    <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+      <ModalContent>
+        {(onClose) => (
+          <>
+            <ModalHeader className="flex flex-col gap-1">
+              Order Details
+            </ModalHeader>
+            <ModalBody>
+              {selectedOrder ? (
+                <div>
+                  <p><strong>Order ID:</strong> {selectedOrder._id}</p>
+                  <p><strong>Party:</strong> {selectedOrder.name}</p>
+                  <p><strong>Total:</strong> {new Intl.NumberFormat('en-US', { 
+                    style: 'currency', 
+                    currency: 'PKR',
+                    minimumFractionDigits: 0 
+                  }).format(selectedOrder.totalPrice || 0)}</p>
+                  <p><strong>Status:</strong> {selectedOrder.totalPrice === selectedOrder.amountPaid ? "Paid" : 
+                    new Date() > new Date(selectedOrder.deadline) ? "Overdue" : "Pending"}</p>
+                </div>
+              ) : (
+                <p>No order selected</p>
+              )}
+            </ModalBody>
+            <ModalFooter>
+              <Button color="danger" variant="light" onPress={onClose}>
+                Close
+              </Button>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
+  );
+};
+
+const Orders = () => {
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [selectedMonth, setSelectedMonth] = useState("Select Month");
   const [selectedYear, setSelectedYear] = useState("Select Year");
-  const [loading, setLoading] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [orders, setOrders] = useState([]);
-
-  const [selectedOrder, setSelectedOrder] = useState([]);
-
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [canceledOrders, setCanceledOrders] = useState([]);
+  const [selectedTab, setSelectedTab] = useState("Default");
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { data: session, status } = useSession();
+  const user = session?.user?.name || null;
 
-  const [isLoading, setIsLoading] = React.useState(true);
-
-  const [selected, setSelected] = React.useState("Default");
-
-  const [canceledOrder, setCanceledOrder] = useState([])
-
-  const { data: session } = useSession();
-
-  const USER = session?.user?.name || null
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setIsLoading(true);
-
     try {
       const response = await fetch("/api/handleOrder");
-      if (!response.ok) throw new Error("Failed to fetch");
+      if (!response.ok) throw new Error("Failed to fetch orders");
       const data = await response.json();
       setOrders(data);
-
-      setIsLoading(false);
     } catch (error) {
+      toast.error("Failed to fetch orders");
       console.error("Error fetching orders:", error);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, []);
+
+  const fetchCanceledOrders = useCallback(async () => {
+    try {
+      const response = await fetch("/api/handleCanceledOrder");
+      if (!response.ok) throw new Error("Failed to fetch canceled orders");
+      const data = await response.json();
+      setCanceledOrders(data);
+    } catch (error) {
+      toast.error("Failed to fetch canceled orders");
+      console.error("Error fetching canceled orders:", error);
+    }
+  }, []);
 
   useEffect(() => {
-    fetchOrders();
-    getCanceledOrder()
-  }, [session]);
-
-  const months = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-
-  const years = [
-    "2025",
-    "2026",
-    "2027",
-    "2028",
-    "2029",
-    "2030",
-    "2031",
-    "2032",
-    "2033",
-    "2034",
-    "2035",
-  ];
+    if (status === "authenticated") {
+      fetchOrders();
+      fetchCanceledOrders();
+    }
+  }, [status, fetchOrders, fetchCanceledOrders]);
 
   const filteredOrders = orders.filter((order) => {
-    // Determine payment status based on totalPending
-    const paymentStatus =
-      order.totalPrice === order.amountPaid
-        ? "paid"
-        : order.totalPrice !== order.amountPaid
-          ? "pending"
-          : new Date() == new Date(order.lastCheckout)
-            ? "overdue"
-            : null;
-
-    const matchesFilter =
-      selectedFilter === "All" ||
-      paymentStatus === selectedFilter.toLowerCase();
-
-    // Extract month and year from lastCheckout
     const checkoutDate = new Date(order.lastCheckout);
-    const checkoutMonth = checkoutDate.toLocaleString("en-US", {
-      month: "long",
-    });
-    const checkoutYear = checkoutDate.getFullYear().toString();
+    const paymentStatus = order.totalPrice === order.amountPaid
+      ? "paid"
+      : order.amountPaid < order.totalPrice && new Date() > new Date(order.deadline)
+      ? "overdue"
+      : "pending";
 
-    const matchesMonth =
-      selectedMonth === "Select Month" || checkoutMonth === selectedMonth;
-
-    const matchesYear =
-      selectedYear === "Select Year" || checkoutYear === selectedYear;
-
-    return matchesFilter && matchesMonth && matchesYear;
+    return (
+      (selectedFilter === "All" || paymentStatus === selectedFilter.toLowerCase()) &&
+      (selectedMonth === "Select Month" || 
+       checkoutDate.toLocaleString("en-US", { month: "long" }) === selectedMonth) &&
+      (selectedYear === "Select Year" || 
+       checkoutDate.getFullYear().toString() === selectedYear)
+    );
   });
 
-  async function DeleteOrder(e, order) {
+  const deleteOrder = async (e, order) => {
+    e.preventDefault();
+    if (!window.confirm("Are you sure you want to delete this order?")) return;
 
-    e.preventDefault(); // Prevent default event behavior
-    setLoading(order); // Set loading state for this specific order
-
-    if (!window.confirm("Are you sure you want to delete this order?")) {
-      setLoading(false);
-      return;
-    }
-
+    setIsLoading(true);
     try {
       const response = await fetch("/api/handleOrder", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ order, USER }),
+        body: JSON.stringify({ order, user }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to Delete");
-      }
-
-      toast.success("Successfully Deleted");
-      fetchOrders();
+      if (!response.ok) throw new Error("Failed to delete order");
+      toast.success("Order deleted successfully");
+      await fetchOrders();
     } catch (error) {
+      toast.error("Failed to delete order");
       console.error(error);
-      toast.error("Error in Deleting");
     } finally {
-      setTimeout(() => {
-        setLoading(null); // Ensure loading state lasts at least 1 sec
-      }, 1000);
+      setIsLoading(false);
     }
-  }
+  };
 
-  // edit
-  async function handleConfirm() {
+  const handleConfirm = async () => {
+    setIsLoading(true);
     try {
       const response = await fetch("/api/handleOrder", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ orders }),
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to update");
-      }
-
-      toast.success("Successfully updated");
-      fetchOrders();
-      setEditing(false);
+      if (!response.ok) throw new Error("Failed to update orders");
+      toast.success("Orders updated successfully");
+      await fetchOrders();
     } catch (error) {
+      toast.error("Failed to update orders");
       console.error(error);
-      toast.error("Error in Updating");
     } finally {
-      setTimeout(() => {
-        setLoading(null); // Ensure loading state lasts at least 1 sec
-      }, 1000);
+      setIsLoading(false);
     }
-  }
+  };
 
-  function ModalAction(order) {
-    console.log(order, "selected order")
+  const modalAction = (order) => {
     setSelectedOrder(order);
-    onOpen()
-  }
-
-  async function getCanceledOrder() {
-    try {
-      const response = await fetch("/api/handleCanceledOrder");
-      if (!response.ok) throw new Error("Failed to fetch");
-      const data = await response.json();
-      setCanceledOrder(data);
-    } catch (error) {
-      console.error("Error fetching canceled orders:", error);
-    }
-  }
+    onOpen();
+  };
 
   return (
     <section className="w-full flex flex-col gap-4">
-      <div className="shadow-small payment-filter flex flex-col gap-3 w-full p-4 bg-white">
-        <h2 className="text-medium text-gray-700 font-normal">
-          Select Filter:
-        </h2>
-        <div className="flex justify-between">
-          <div className="relative flex gap-3 items-center">
-            <Dropdown placement="bottom-start">
-              <DropdownTrigger>
-                <Button
-                  variant="bordered"
-                  className="w-40 flex justify-between"
-                >
-                  {selectedFilter}
-                  <ChevronDown className="text-gray-500" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu>
-                {["All", "Paid", "Pending", "Overdue"].map((option) => (
-                  <DropdownItem
-                    key={option}
-                    onPress={() => setSelectedFilter(option)}
-                  >
-                    {option}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-
-            <Dropdown placement="bottom-start">
-              <DropdownTrigger>
-                <Button
-                  variant="bordered"
-                  className="w-40 flex justify-between"
-                >
-                  {selectedMonth}
-                  <ChevronDown className="text-gray-500" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu>
-                {months.map((option) => (
-                  <DropdownItem
-                    key={option}
-                    onPress={() => setSelectedMonth(option)}
-                  >
-                    {option}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-
-            <Dropdown placement="bottom-start">
-              <DropdownTrigger>
-                <Button
-                  variant="bordered"
-                  className="w-40 flex justify-between"
-                >
-                  {selectedYear}
-                  <ChevronDown className="text-gray-500" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu>
-                {years.map((option) => (
-                  <DropdownItem
-                    key={option}
-                    onPress={() => setSelectedYear(option)}
-                  >
-                    {option}
-                  </DropdownItem>
-                ))}
-              </DropdownMenu>
-            </Dropdown>
-
-            <Button
-              variant="ghost"
-              className="flex items-center gap-2"
-              onPress={() => {
-                setSelectedFilter("All");
-                setSelectedMonth("Select Month");
-                setSelectedYear("Select Year");
-              }}
-            >
-              <X className="w-4 h-4" />
-              Clear Filters
-            </Button>
-          </div>
-
-          <div className="flex gap-3">
-
-            <Tabs color="white" aria-label="Options" selectedKey={selected} onSelectionChange={setSelected}>
-              <Tab key="Default" title="Default" />
-              <Tab key="Canceled" title="Canceled" />
-            </Tabs>
-
-            <Action
-              fetchOrders={fetchOrders}
-            />
-          </div>
-        </div>
-      </div>
-
-
-      {
-        selected == "Default" ?
-
-          <>
-            {isLoading ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50">
-                <Spinner className="w-10 h-10 animate-spin text-gray-500" />
-              </div>
-            ) : (
-              <Table
-                className="overflow-x-scroll  text-nowrap custom-scrollbar"
-                aria-label="Order analysis table"
-                loading={isLoading}
-              >
-
-                <TableHeader>
-                  <TableColumn>#</TableColumn>
-                  <TableColumn>USER</TableColumn>
-                  <TableColumn>PARTY</TableColumn>
-                  <TableColumn>ORDER</TableColumn>
-                  <TableColumn>QUALITY</TableColumn>
-                  <TableColumn>TOTAL</TableColumn>
-                  <TableColumn>PENDING</TableColumn>
-                  <TableColumn>STATUS</TableColumn>
-                  <TableColumn>ACTION</TableColumn>
-                </TableHeader>
-
-                <TableBody emptyContent="No Orders Found">
-                  {filteredOrders
-                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                    .map((order, index) => (
-                      <TableRow className="hover:bg-gray-100" key={order._id}>
-                        <TableCell>{index + 1}</TableCell>
-                        <TableCell>{order.user || "N/A"} </TableCell>
-
-                        <TableCell className="max-w-52">
-                          <div className="flex items-center gap-3">
-                            <div>
-                              <p className="font-semibold">{order.name}</p>
-                              <p className="text-sm text-gray-500">{order.phone}</p>
-                            </div>
-                          </div>
-                        </TableCell>
-
-                        <TableCell>
-                          {order.orderImage ? (
-                            <img
-                              src={order.orderImage}
-                              className="w-10 h-10"
-                              alt="Order"
-                            />
-                          ) : (
-                            "No Image"
-                          )}
-                        </TableCell>
-
-                        <TableCell className="max-w-52">
-                          <p className="text-sm text-gray-500">{order.quality}</p>
-                        </TableCell>
-
-                        <TableCell className="text-nowrap">
-                          {/* <p className="text-sm">{order.deadline? order.deadline : "N/A" }</p> */}
-                          <p className="text-sm">{order.totalPrice? order.totalPrice : "N/A" }</p>
-                        </TableCell>
-
-                        <TableCell className="text-nowrap">
-                          {" "}
-                          {order.totalPrice - order.amountPaid} R.S
-                        </TableCell>
-
-                        <TableCell>
-                          <span
-                            className={`px-4 text-xs py-1 rounded-full  ${order.totalPrice === order.amountPaid
-                              ? "bg-green-100 text-green-700" // Paid
-                              : new Date() > new Date(order.deadline)
-                                ? "bg-red-100 text-red-700" // Overdue
-                                : "bg-yellow-100 text-yellow-700" // Pending
-                              }`}
-                          >
-                            {order.totalPrice === order.amountPaid
-                              ? "Paid"
-                              : new Date() > new Date(order.deadline)
-                                ? "Overdue"
-                                : "Pending"}
-                          </span>
-                        </TableCell>
-
-                        <TableCell className="text-nowrap">
-                          {loading === order._id ? (
-                            <Spinner size="sm" />
-                          ) : (
-                            <div className="flex gap-3 items-center">
-                              <X
-                                onClick={(e) => DeleteOrder(e, order)}
-                                className="text-red-600 hover:cursor-pointer"
-                              />
-
-                              <Eye onClick={() => ModalAction(order)} className="text-blue-600 hover:cursor-pointer" />
-
-
-                            </div>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            )}
-
-          </>
-          :
-          <>
-            {isLoading ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-50">
-                <Spinner className="w-10 h-10 animate-spin text-gray-500" />
-              </div>
-            ) : (
-              <Table
-                className="overflow-x-scroll  text-nowrap custom-scrollbar"
-                aria-label="Order analysis table"
-                loading={isLoading}
-              >
-
-                <TableHeader>
-                  <TableColumn>#</TableColumn>
-                  <TableColumn>USER</TableColumn>
-                  <TableColumn>PARTY</TableColumn>
-                  <TableColumn>ORDER</TableColumn>
-                  <TableColumn>TITLE</TableColumn>
-                  <TableColumn>AMOUNT</TableColumn>
-                  <TableColumn>STATUS</TableColumn>
-                  <TableColumn>DUE DATE</TableColumn>
-                  {/* <TableColumn>ACTION</TableColumn> */}
-                </TableHeader>
-
-                <TableBody emptyContent="No Orders Found">
-                  {canceledOrder
-                    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                    .map((order, index) => (
-                      <TableRow className="hover:bg-gray-100" key={order._id}>
-                        <TableCell>{index + 1}</TableCell>
-
-                        <TableCell>{order.user || "N/A"}</TableCell>
-
-                        <TableCell className="max-w-52">
-                          <div className="flex items-center gap-3">
-                            <div>
-                              <p className="font-semibold">{order.name}</p>
-                              <p className="text-sm text-gray-500">{order.phone}</p>
-                            </div>
-                          </div>
-                        </TableCell>
-
-                        <TableCell>
-                          {order.orderImage ? (
-                            <img
-                              src={order.orderImage}
-                              className="w-10 h-10"
-                              alt="Order"
-                            />
-                          ) : (
-                            "No Image"
-                          )}
-                        </TableCell>
-
-                        <TableCell className="max-w-52">
-                          <p className="text-sm text-gray-500">{order.orderName}</p>
-                        </TableCell>
-
-                        <TableCell className="text-nowrap">
-                          {" "}
-                          {/* {order.totalPrice - order.amountPaid} R.S */}
-                          {order.totalPrice} R.S
-                        </TableCell>
-
-                        <TableCell>
-                          <span
-                            className={`px-4 text-xs py-1 rounded-full  ${order.totalPrice === order.amountPaid
-                              ? "bg-green-100 text-green-700" // Paid
-                              : new Date() > new Date(order.deadline)
-                                ? "bg-red-100 text-red-700" // Overdue
-                                : "bg-yellow-100 text-yellow-700" // Pending
-                              }`}
-                          >
-                            {order.totalPrice === order.amountPaid
-                              ? "Paid"
-                              : new Date() > new Date(order.deadline)
-                                ? "Overdue"
-                                : "Pending"}
-                          </span>
-                        </TableCell>
-
-                        <TableCell className="text-nowrap">
-                          <p className="text-sm">{order.deadline}</p>
-                        </TableCell>
-
-                      </TableRow>
-                    ))}
-                </TableBody>
-
-
-              </Table>
-            )}
-
-          </>
-
-      }
-
-      <Detail isOpen={isOpen} selectedOrder={selectedOrder} fetchOrders={fetchOrders} onOpenChange={onOpenChange} />
+      <FilterSection
+        selectedFilter={selectedFilter}
+        setSelectedFilter={setSelectedFilter}
+        selectedMonth={selectedMonth}
+        setSelectedMonth={setSelectedMonth}
+        selectedYear={selectedYear}
+        setSelectedYear={setSelectedYear}
+        selectedTab={selectedTab}
+        setSelectedTab={setSelectedTab}
+        fetchOrders={fetchOrders}
+      />
+      <OrderTable
+        isLoading={isLoading}
+        orders={filteredOrders}
+        canceledOrders={canceledOrders}
+        selectedTab={selectedTab}
+        fetchOrders={fetchOrders}
+        modalAction={modalAction}
+        deleteOrder={deleteOrder}
+      />
+      <Detail
+        isOpen={isOpen}
+        selectedOrder={selectedOrder}
+        fetchOrders={fetchOrders}
+        onOpenChange={onOpenChange}
+      />
     </section>
   );
-}
+};
+
+export default Orders;

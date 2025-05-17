@@ -20,7 +20,7 @@ import {
 import { Plus } from "lucide-react";
 import { toast } from "react-toastify";
 
-export default function Action({ factories, poNumbers }) {
+export default function Action({ factories, poNumbers , fetchStocks }) {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   // Main stock fields
@@ -96,31 +96,84 @@ export default function Action({ factories, poNumbers }) {
     setFixedCost("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const stockData = {
-      factoryName,
-      purchaseOrderNumber,
-      unitType,
-      clothQuality,
-      grayClothQuantity,
-      scratchQuantity,
-      baseCostPerUnit,
-      factoryPaymentPerUnit,
-      transportExpenses,
-      amountPaid,
-      pendingPayment,
-      issueDate,
-      deadlineDate,
-      perUnitCharges,
-      fixedCharges,
-    };
+    try {
+      const response = await fetch("/api/handleStock", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          factoryName,
+          purchaseOrderNumber,
+          unitType,
+          clothQuality,
+          grayClothQuantity,
+          scratchQuantity,
+          baseCostPerUnit,
+          factoryPaymentPerUnit,
+          transportExpenses,
+          amountPaid,
+          issueDate,
+          deadlineDate,
+          perUnitCharges,
+          fixedCharges,
 
-    console.log("Stock Record Submitted:", stockData);
-    toast.success("Stock entry added successfully!");
-    setLoading(false);
+          netBaseCost,
+          totalPerUnitCost,
+          totalFixedCost,
+          pendingPayment,
+          totalMiscellaneousCost,
+        }),
+      });
+
+      if (!response.ok) {
+        toast.error("Failed to add stock entry!");
+        setLoading(false);
+        return;
+      }
+      const data = await response.json();
+      if (data.error) {
+        toast.error(data.error);
+        setLoading(false);
+        return;
+      }
+      // Reset form fields
+      setFactoryName("");
+      setPurchaseOrderNumber("");
+      setUnitType("");
+      setClothQuality("");
+      setGrayClothQuantity("");
+      setScratchQuantity("");
+      setBaseCostPerUnit("");
+      setFactoryPaymentPerUnit("");
+      setAmountPaid("");
+      setIssueDate("");
+      setDeadlineDate("");
+      setPerUnitCharges([]);
+      setFixedCharges([]);
+      setPerUnitDescription("");
+      setPerUnitCost("");
+      setFixedDescription("");
+      setFixedCost("");
+      setTransportExpenses("");
+
+      toast.success("Stock entry added successfully!");
+      setLoading(false);
+
+      // trigget get stock api 
+      fetchStocks();
+      // onClose();
+
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error("An error occurred while submitting the form.");
+      setLoading(false);
+      return;
+    }
   };
 
   return (
@@ -194,37 +247,37 @@ export default function Action({ factories, poNumbers }) {
                     label="Cloth Quality"
                     value={clothQuality}
                     onChange={(e) => setClothQuality(e.target.value)}
-                    required
+
                   />
                   <Input
                     label="Gray Cloth Quantity"
                     value={grayClothQuantity}
                     onChange={(e) => setGrayClothQuantity(e.target.value)}
-                    required
+
                   />
                   <Input
                     label="Scratch Quantity"
                     value={scratchQuantity}
                     onChange={(e) => setScratchQuantity(e.target.value)}
-                    required
+
                   />
                   <Input
                     label="Base Cost Per Unit"
                     value={baseCostPerUnit}
                     onChange={(e) => setBaseCostPerUnit(e.target.value)}
-                    required
+
                   />
                   <Input
                     label="Factory Payment Per Unit"
                     value={factoryPaymentPerUnit}
                     onChange={(e) => setFactoryPaymentPerUnit(e.target.value)}
-                    required
+
                   />
                   <Input
                     label="Total Transport Expenses"
                     value={transportExpenses}
                     onChange={(e) => setTransportExpenses(e.target.value)}
-                    required
+
                   />
 
                   {/* Per Unit Charges Section */}
@@ -293,7 +346,7 @@ export default function Action({ factories, poNumbers }) {
                     label="Amount Paid"
                     value={amountPaid}
                     onChange={(e) => setAmountPaid(e.target.value)}
-                    required
+
                   />
 
                   {/* Totals */}
@@ -326,7 +379,7 @@ export default function Action({ factories, poNumbers }) {
                     type="date"
                     value={issueDate}
                     onChange={(e) => setIssueDate(e.target.value)}
-                    required
+
                   />
                   <Input
                     label="Deadline"
