@@ -4,7 +4,7 @@ import React from "react";
 import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Button, Tooltip } from "@heroui/react";
 import { Edit, Trash2 } from "lucide-react";
 
-export function ItemsTable({ items, stockData, handleEditItem, handleRemoveItem }) {
+export function ItemsTable({ items, stockData, handleRemoveItem }) {
   return (
     <div className="border rounded-lg overflow-hidden">
       <Table aria-label="Order items table">
@@ -22,24 +22,14 @@ export function ItemsTable({ items, stockData, handleEditItem, handleRemoveItem 
 
             return (
               <TableRow key={index}>
-                <TableCell>{stock?.quality || "N/A"}</TableCell>
+                <TableCell>{stock?.clothQuality || "N/A"}</TableCell>
                 <TableCell>
-                  {item.quantity} {stock?.unit}
+                  {item.quantity} {stock?.unitType || "Unknown Unit"}
                 </TableCell>
                 <TableCell>{item.salePricePerUnit}</TableCell>
                 <TableCell>{itemTotal.toFixed(2)}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
-                    <Tooltip content="Edit">
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        onPress={() => handleEditItem(index)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    </Tooltip>
                     <Tooltip content="Remove">
                       <Button
                         isIconOnly

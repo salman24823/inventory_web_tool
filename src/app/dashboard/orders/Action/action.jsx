@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure } from "@heroui/react";
 import { toast } from "react-toastify";
 import { Plus } from "lucide-react";
@@ -9,7 +9,7 @@ import { PartyInput } from "./PartyInput";
 import { OrderItemForm } from "./OrderItemForm";
 import { PaymentDetails } from "./PaymentDetails";
 import { ItemsTable } from "./ItemsTable";
-import { useStore } from "zustand";
+import useGlobalStore from "@/app/store/globalstore";
 
 export default function Action({ fetchOrders }) {
 
@@ -20,26 +20,27 @@ export default function Action({ fetchOrders }) {
   const [issueDate, setIssueDate] = useState("");
   const [deadline, setDeadline] = useState("");
   const [transactionType, setTransactionType] = useState("Cash");
-  const [stockData, setStockData] = useState([]);
-  const [partyNames, setPartyName] = useState([]);
+  const [partyNames, setPartyNames] = useState([]);
   const [items, setItems] = useState([]);
   const [currentItem, setCurrentItem] = useState({
     stockId: "",
     quantity: "",
     salePricePerUnit: "",
   });
+
+  const { stockData } = useGlobalStore();
+
   const [editingIndex, setEditingIndex] = useState(null);
   const [amountPaid, setAmountPaid] = useState("");
+
   const { data: session } = useSession();
-  const USER = session?.user?.name || "Demo User";
+  const USER = session?.user?.name ? encodeURIComponent(session.user.name) : "Demo User";
 
   useEffect(() => {
-    setPartyName(["Usama Party", "Ali Party", "Hamza Party", "Khalid Party"]);
-    setStockData([
-      { _id: "1", quality: "22/45 Cotton", quantity: 100, unit: "Meter", costPerUnit: "500" },
-      { _id: "2", quality: "12/55 PolyEster", quantity: 200, unit: "Meter", costPerUnit: "300" },
-      { _id: "3", quality: "45:12 Khadar", quantity: 150, unit: "Meter", costPerUnit: "250" },
-    ]);
+    const fetchPartyNames = async () => {
+      setPartyNames(["Usama Party", "Ali Party", "Hamza Party", "Khalid Party"]);
+    };
+    fetchPartyNames();
   }, []);
 
   const totalAmount = items.reduce(
@@ -48,79 +49,142 @@ export default function Action({ fetchOrders }) {
   );
   const pendingAmount = totalAmount - Number(amountPaid);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  const resetForm = useCallback(() => {
+    setName("");
+    setPhone("");
+    setItems([]);
+    setCurrentItem({
+      stockId: "",
+      quantity: "",
+      salePricePerUnit: "",
+    });
+    setAmountPaid("");
+    setIssueDate("");
+    setDeadline("");
+    setTransactionType("Cash");
+    setLoading(false);
+  }, []);
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      setLoading(true);
 
-    if (items.length === 0) {
-      toast.error("Please add at least one item");
-      setLoading(false);
-      return;
-    }
+      // Validate required fields
+      if (!name || !phone || !issueDate) {
+        toast.error("Please fill all required fields");
+        setLoading(false);
+        return;
+      }
 
-    const order = {
+      if (items.length === 0) {
+        toast.error("Please add at least one item");
+        setLoading(false);
+        return;
+      }
+
+      // Validate items
+      for (const item of items) {
+        if (!item.stockId || !item.quantity || !item.salePricePerUnit) {
+          toast.error("Invalid item data");
+          setLoading(false);
+          return;
+        }
+      }
+
+      const order = {
+        name,
+        phone,
+        items: items.map((item) => {
+          const stock = stockData.find((s) => s._id === item.stockId);
+          if (!stock) {
+            throw new Error(`Stock not found for ID: ${item.stockId}`);
+          }
+          return {
+            stockId: item.stockId,
+            stockName: stock.clothQuality || "",
+            quantity: Number(item.quantity),
+            salePricePerUnit: Number(item.salePricePerUnit),
+            totalPrice: Number(item.quantity) * Number(item.salePricePerUnit),
+          };
+        }),
+        totalAmount: Number(totalAmount),
+        amountPaid: Number(amountPaid) || 0,
+        pendingAmount: Number(pendingAmount),
+        issueDate: new Date(issueDate).toISOString(),
+        deadline: deadline ? new Date(deadline).toISOString() : null,
+        transactionType,
+        createdBy: USER,
+      };
+
+      try {
+        // Create order
+        const response = await fetch("/api/handleOrder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(order),
+        });
+
+        const orderData = await response.json();
+        if (!response.ok) {
+          throw new Error(orderData.message || `HTTP error! status: ${response.status}`);
+        }
+
+        // Handle customer (create or update)
+        try {
+          const customerResponse = await fetch("/api/handleCustomer", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name,
+              phone,
+              amountDealing: Number(totalAmount),
+              amountPending: Number(pendingAmount), // Fixed property name
+              issueDate,
+            }),
+          });
+
+          const customerData = await customerResponse.json();
+          if (!customerResponse.ok) {
+            throw new Error(customerData.message || "Failed to process customer");
+          }
+
+          toast.success("Order and customer processed successfully!");
+        } catch (customerError) {
+          toast.error(`Failed to process customer: ${customerError.message}`);
+          console.error("Customer processing error:", customerError);
+        }
+
+        await fetchOrders();
+        onOpenChange(false);
+        resetForm();
+      } catch (error) {
+        toast.error(`Failed to create order: ${error.message}`);
+        console.error("Order creation error:", error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
       name,
       phone,
-      items: items.map((item) => {
-        const stock = stockData.find((s) => s._id === item.stockId);
-        return {
-          stockId: item.stockId,
-          stockName: stock?.quality || "",
-          quantity: Number(item.quantity),
-          salePricePerUnit: Number(item.salePricePerUnit),
-          totalPrice: Number(item.quantity) * Number(item.salePricePerUnit),
-        };
-      }),
-      totalAmount,
-      amountPaid: Number(amountPaid),
-      pendingAmount,
       issueDate,
+      items,
+      totalAmount,
+      amountPaid,
+      pendingAmount,
       deadline,
       transactionType,
-      createdBy: USER,
-    };
+      USER,
+      fetchOrders,
+      onOpenChange,
+      stockData,
+      resetForm,
+    ]
+  );
 
-    try {
-      const response = await fetch("/api/handleOrder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(order),
-      });
-
-      if (!response.ok) throw new Error("Failed to create order");
-      toast.success("Order added successfully!");
-      await fetchOrders(); // Refresh orders list
-    } catch (error) {
-      toast.error("Failed to create order");
-      console.error(error);
-    } finally {
-      setName("");
-      setPhone("");
-      setItems([]);
-      setCurrentItem({
-        stockId: "",
-        quantity: "",
-        salePricePerUnit: "",
-      });
-      setAmountPaid("");
-      setIssueDate("");
-      setDeadline("");
-      setTransactionType("Cash");
-      setLoading(false);
-      onOpenChange(false);
-    }
-  };
-
-  const handleEditItem = (index) => {
-    setCurrentItem({ ...items[index] });
-    setEditingIndex(index);
-  };
-
-  const handleRemoveItem = (index) => {
-    const newItems = [...items];
-    newItems.splice(index, 1);
-    setItems(newItems);
-  };
+  const handleRemoveItem = useCallback((index) => {
+    setItems((prevItems) => prevItems.filter((_, i) => i !== index));
+  }, []);
 
   return (
     <>
@@ -131,9 +195,9 @@ export default function Action({ fetchOrders }) {
       <Modal size="5xl" isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
           {(onClose) => (
-            <div className="overflow-y-scroll h-[90vh]">
+            <>
               <ModalHeader>New Order</ModalHeader>
-              <ModalBody>
+              <ModalBody className="overflow-y-auto max-h-[80vh]">
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-2 gap-5">
                     <PartyInput
@@ -170,7 +234,6 @@ export default function Action({ fetchOrders }) {
                     <ItemsTable
                       items={items}
                       stockData={stockData}
-                      handleEditItem={handleEditItem}
                       handleRemoveItem={handleRemoveItem}
                     />
                   )}
@@ -188,7 +251,7 @@ export default function Action({ fetchOrders }) {
                   </ModalFooter>
                 </form>
               </ModalBody>
-            </div>
+            </>
           )}
         </ModalContent>
       </Modal>

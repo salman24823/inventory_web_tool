@@ -1,9 +1,10 @@
-import { create } from 'zustand'
+import { create } from 'zustand';
 
 const useGlobalStore = create((set) => ({
 
   factories: [],
   poNumbers: [],
+  stockData: [],
 
   fetchFactoryName: async () => {
     try {
@@ -34,20 +35,37 @@ const useGlobalStore = create((set) => ({
           "Content-Type": "application/json",
         },
       });
-  
+
       if (!response.ok) throw new Error("Failed to fetch PO numbers");
-  
+
       const data = await response.json();
       const poNames = data.pos.map((po) => po.name);
-    
+
       set({ poNumbers: poNames });
     } catch (error) {
       console.error("Error fetching PO numbers:", error);
       set({ poNumbers: [] });
     }
+  },
+
+  fetchStock: async () => {
+    try {
+      const response = await fetch("/api/handleStock", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch Stock");
+
+      const data = await response.json();
+      set({ stockData: data });
+    } catch (error) {
+      console.error("Error fetching stock data:", error);
+      set({ stockData: [] });
+    }
   }
-  
-  
 
 }));
 

@@ -1,18 +1,20 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Select, SelectItem, Input, Button } from "@heroui/react";
 import { toast } from "react-toastify";
+import useGlobalStore from "@/app/store/globalstore";
 
 export function OrderItemForm({
   currentItem,
   setCurrentItem,
-  stockData,
   items,
   setItems,
   editingIndex,
   setEditingIndex,
 }) {
+  const { fetchStock, stockData } = useGlobalStore();
+
   const selectedStock = currentItem.stockId
     ? stockData.find((s) => s._id === currentItem.stockId)
     : null;
@@ -20,7 +22,10 @@ export function OrderItemForm({
   const parsedQuantity = Number(currentItem.quantity);
   const parsedSalePricePerUnit = Number(currentItem.salePricePerUnit);
   const profitPerUnit = selectedStock && parsedSalePricePerUnit
-    ? (parsedSalePricePerUnit - Number(selectedStock.costPerUnit)).toFixed(2)
+    ? (parsedSalePricePerUnit - Number(selectedStock.baseCostPerUnit)).toFixed(2)
+    : "N/A";
+  const totalProfit = profitPerUnit !== "N/A" && parsedQuantity
+    ? (profitPerUnit * parsedQuantity).toFixed(2)
     : "N/A";
 
   const handleAddItem = () => {
@@ -28,7 +33,11 @@ export function OrderItemForm({
       toast.error("Please fill all item fields");
       return;
     }
-
+    const quantity = Number(currentItem.quantity);
+    if (quantity > selectedStock.stockQuantity) {
+      toast.error(`Quantity cannot exceed available stock: ${selectedStock.stockQuantity}`);
+      return;
+    }
     if (editingIndex !== null) {
       const updatedItems = [...items];
       updatedItems[editingIndex] = { ...currentItem };
@@ -37,7 +46,6 @@ export function OrderItemForm({
     } else {
       setItems([...items, { ...currentItem }]);
     }
-
     setCurrentItem({
       stockId: "",
       quantity: "",
@@ -45,17 +53,22 @@ export function OrderItemForm({
     });
   };
 
+  useEffect(() => {
+    fetchStock();
+  }, []);
+
   return (
     <div className="border p-4 rounded-lg">
-      <h3 className="font-semibold mb-3">Add Items</h3>
+      <h3 className="font-semibold mb-3" onClick={()=> console.log(stockData,"stockData") }>Add Items</h3>
+      
       <Select
-        label={currentItem.stockId ? `Selected: ${selectedStock?.quality}` : "Select Stock"}
+        label={currentItem.stockId ? `Selected: ${selectedStock?.clothQuality}` : "Select Stock"}
         value={currentItem.stockId}
         onChange={(e) => setCurrentItem({ ...currentItem, stockId: e.target.value })}
       >
         {stockData.map((stock) => (
           <SelectItem key={stock._id} value={stock._id}>
-            {stock.quality} (Available: {stock.quantity})
+            {stock.clothQuality} (Available: {stock.stockQuantity} {stock.unitType})
           </SelectItem>
         ))}
       </Select>
@@ -91,15 +104,24 @@ export function OrderItemForm({
               <span className="font-semibold">Profit / Unit: </span>
               {profitPerUnit}
             </p>
+            <p>
+              <span className="font-semibold">Total Profit: </span>
+              {totalProfit}
+            </p>
           </div>
           <p className="mt-2">
             <span className="font-semibold">Available: </span>
-            {selectedStock.quantity} {selectedStock.unit}
+            {selectedStock.stockQuantity} {selectedStock.unitType || "Unknown Unit"}
           </p>
           {currentItem.quantity && (
             <p className="mt-1">
               <span className="font-semibold">Remaining: </span>
-              {selectedStock.quantity - Number(currentItem.quantity)} {selectedStock.unit}
+              {selectedStock.stockQuantity - Number(currentItem.quantity)} {selectedStock.unitType || "Unknown Unit"}
+            </p>
+          )}
+          {profitPerUnit < 0 && (
+            <p className="mt-1 text-red-600">
+              Warning: Negative profit per unit
             </p>
           )}
         </div>

@@ -42,9 +42,9 @@ export function FilterSection({
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 11 }, (_, i) => (currentYear + i).toString());
 
-  const isFilterApplied = selectedFilter !== "All" || 
-                        selectedMonth !== "Select Month" || 
-                        selectedYear !== "Select Year";
+  const isFilterApplied = selectedFilter !== "All" ||
+    selectedMonth !== "Select Month" ||
+    selectedYear !== "Select Year";
 
   return (
     <div className="shadow-sm flex flex-col gap-4 w-full p-6 bg-white rounded-lg">
